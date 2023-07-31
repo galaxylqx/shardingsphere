@@ -18,7 +18,7 @@
 package org.apache.shardingsphere.encrypt.merge.dal.show;
 
 import org.apache.shardingsphere.encrypt.rule.EncryptRule;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
 
 import java.sql.SQLException;
@@ -30,7 +30,7 @@ public final class MergedEncryptShowCreateTableMergedResult extends EncryptShowC
     
     private final QueryResult queryResult;
     
-    public MergedEncryptShowCreateTableMergedResult(final QueryResult queryResult, final SQLStatementContext<?> sqlStatementContext, final EncryptRule encryptRule) {
+    public MergedEncryptShowCreateTableMergedResult(final QueryResult queryResult, final SQLStatementContext sqlStatementContext, final EncryptRule encryptRule) {
         super(sqlStatementContext, encryptRule);
         this.queryResult = queryResult;
     }

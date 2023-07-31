@@ -20,9 +20,10 @@ package org.apache.shardingsphere.infra.merge.result.impl.stream;
 import lombok.Setter;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.sql.SQLException;
 import java.util.Calendar;
 
@@ -58,6 +59,13 @@ public abstract class StreamMergedResult implements MergedResult {
     @Override
     public final InputStream getInputStream(final int columnIndex, final String type) throws SQLException {
         InputStream result = getCurrentQueryResult().getInputStream(columnIndex, type);
+        wasNull = getCurrentQueryResult().wasNull();
+        return result;
+    }
+    
+    @Override
+    public Reader getCharacterStream(final int columnIndex) throws SQLException {
+        Reader result = getCurrentQueryResult().getCharacterStream(columnIndex);
         wasNull = getCurrentQueryResult().wasNull();
         return result;
     }

@@ -20,8 +20,7 @@ package org.apache.shardingsphere.proxy.frontend.opengauss;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.shardingsphere.db.protocol.opengauss.codec.OpenGaussPacketCodecEngine;
-import org.apache.shardingsphere.db.protocol.postgresql.constant.PostgreSQLServerInfo;
-import org.apache.shardingsphere.dialect.exception.transaction.InTransactionException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.transaction.InTransactionException;
 import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.frontend.opengauss.authentication.OpenGaussAuthenticationEngine;
 import org.apache.shardingsphere.proxy.frontend.opengauss.command.OpenGaussCommandExecuteEngine;
@@ -44,24 +43,19 @@ public final class OpenGaussFrontendEngine implements DatabaseProtocolFrontendEn
     private final OpenGaussPacketCodecEngine codecEngine = new OpenGaussPacketCodecEngine();
     
     @Override
-    public void setDatabaseVersion(final String databaseName, final String databaseVersion) {
-        PostgreSQLServerInfo.setServerVersion(databaseVersion);
-    }
-    
-    @Override
     public void release(final ConnectionSession connectionSession) {
         postgreSQLFrontendEngine.release(connectionSession);
     }
     
     @Override
     public void handleException(final ConnectionSession connectionSession, final Exception exception) {
-        if (connectionSession.getTransactionStatus().isInTransaction() && !connectionSession.getTransactionStatus().isRollbackOnly() && !(exception instanceof InTransactionException)) {
-            connectionSession.getTransactionStatus().setRollbackOnly(true);
+        if (connectionSession.getTransactionStatus().isInTransaction() && !connectionSession.getTransactionStatus().isExceptionOccur() && !(exception instanceof InTransactionException)) {
+            connectionSession.getTransactionStatus().setExceptionOccur(true);
         }
     }
     
     @Override
-    public String getType() {
+    public String getDatabaseType() {
         return "openGauss";
     }
 }

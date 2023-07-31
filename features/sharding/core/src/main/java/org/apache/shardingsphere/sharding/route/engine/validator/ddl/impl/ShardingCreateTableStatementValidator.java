@@ -17,9 +17,9 @@
 
 package org.apache.shardingsphere.sharding.route.engine.validator.ddl.impl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.type.DatabaseTypeEngine;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseTypeRegistry;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
@@ -36,23 +36,24 @@ import java.util.List;
 /**
  * Sharding create table statement validator.
  */
-public final class ShardingCreateTableStatementValidator extends ShardingDDLStatementValidator<CreateTableStatement> {
+public final class ShardingCreateTableStatementValidator extends ShardingDDLStatementValidator {
     
     @Override
-    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext<CreateTableStatement> sqlStatementContext,
+    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                             final List<Object> params, final ShardingSphereDatabase database, final ConfigurationProperties props) {
-        if (!CreateTableStatementHandler.ifNotExists(sqlStatementContext.getSqlStatement())) {
-            String defaultSchemaName = DatabaseTypeEngine.getDefaultSchemaName(sqlStatementContext.getDatabaseType(), database.getName());
+        CreateTableStatement createTableStatement = (CreateTableStatement) sqlStatementContext.getSqlStatement();
+        if (!CreateTableStatementHandler.ifNotExists(createTableStatement)) {
+            String defaultSchemaName = new DatabaseTypeRegistry(sqlStatementContext.getDatabaseType()).getDefaultSchemaName(database.getName());
             ShardingSphereSchema schema = sqlStatementContext.getTablesContext().getSchemaName()
                     .map(database::getSchema).orElseGet(() -> database.getSchema(defaultSchemaName));
-            validateTableNotExist(schema, Collections.singletonList(sqlStatementContext.getSqlStatement().getTable()));
+            validateTableNotExist(schema, Collections.singleton(createTableStatement.getTable()));
         }
     }
     
     @Override
-    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext<CreateTableStatement> sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
+    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
                              final ShardingSphereDatabase database, final ConfigurationProperties props, final RouteContext routeContext) {
-        String primaryTable = sqlStatementContext.getSqlStatement().getTable().getTableName().getIdentifier().getValue();
+        String primaryTable = ((CreateTableStatement) sqlStatementContext.getSqlStatement()).getTable().getTableName().getIdentifier().getValue();
         if (isRouteUnitDataNodeDifferentSize(shardingRule, routeContext, primaryTable)) {
             throw new ShardingDDLRouteException("CREATE", "TABLE", sqlStatementContext.getTablesContext().getTableNames());
         }

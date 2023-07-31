@@ -18,13 +18,12 @@
 package org.apache.shardingsphere.sharding.merge.dql.orderby;
 
 import lombok.Getter;
-import org.apache.shardingsphere.infra.binder.segment.select.orderby.OrderByItem;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.segment.select.orderby.OrderByItem;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
-import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereColumn;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereTable;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.exception.data.NotImplementComparableValueException;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.order.item.ColumnOrderByItemSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.order.item.IndexOrderByItemSegment;
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Order by value.
@@ -74,18 +72,17 @@ public final class OrderByValue implements Comparable<OrderByValue> {
         for (SimpleTableSegment each : selectStatementContext.getAllTables()) {
             String tableName = each.getTableName().getIdentifier().getValue();
             ShardingSphereTable table = schema.getTable(tableName);
-            Map<String, ShardingSphereColumn> columns = table.getColumns();
             OrderByItemSegment orderByItemSegment = eachOrderByItem.getSegment();
             if (orderByItemSegment instanceof ColumnOrderByItemSegment) {
                 String columnName = ((ColumnOrderByItemSegment) orderByItemSegment).getColumn().getIdentifier().getValue();
-                if (columns.containsKey(columnName)) {
-                    return columns.get(columnName).isCaseSensitive();
+                if (table.containsColumn(columnName)) {
+                    return table.getColumn(columnName).isCaseSensitive();
                 }
             } else if (orderByItemSegment instanceof IndexOrderByItemSegment) {
                 int columnIndex = ((IndexOrderByItemSegment) orderByItemSegment).getColumnIndex();
                 String columnName = queryResult.getMetaData().getColumnName(columnIndex);
-                if (columns.containsKey(columnName)) {
-                    return columns.get(columnName).isCaseSensitive();
+                if (table.containsColumn(columnName)) {
+                    return table.getColumn(columnName).isCaseSensitive();
                 }
             } else {
                 return false;
@@ -121,7 +118,7 @@ public final class OrderByValue implements Comparable<OrderByValue> {
         int i = 0;
         for (OrderByItem each : orderByItems) {
             int result = CompareUtils.compareTo(orderValues.get(i), orderByValue.orderValues.get(i), each.getSegment().getOrderDirection(),
-                    each.getSegment().getNullsOrderType(selectStatementContext.getDatabaseType().getType()), orderValuesCaseSensitive.get(i));
+                    each.getSegment().getNullsOrderType(selectStatementContext.getDatabaseType()), orderValuesCaseSensitive.get(i));
             if (0 != result) {
                 return result;
             }

@@ -17,8 +17,8 @@
 
 package org.apache.shardingsphere.sharding.route.engine.condition;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.sharding.route.engine.condition.value.ListShardingConditionValue;
 import org.apache.shardingsphere.sharding.route.engine.condition.value.ShardingConditionValue;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
@@ -55,13 +55,13 @@ class ShardingConditionsTest {
     }
     
     @Test
-    void isSameShardingConditionTrue() {
+    void assertIsSameShardingConditionTrue() {
         ShardingConditions shardingConditions = createSingleShardingConditions();
         assertTrue(shardingConditions.isSameShardingCondition());
     }
     
     @Test
-    void isSameShardingConditionFalse() {
+    void assertIsSameShardingConditionFalse() {
         ShardingConditions shardingConditions = createMultipleShardingConditions();
         assertFalse(shardingConditions.isSameShardingCondition());
     }

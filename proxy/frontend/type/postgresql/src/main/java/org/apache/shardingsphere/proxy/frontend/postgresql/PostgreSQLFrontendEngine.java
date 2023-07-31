@@ -20,12 +20,9 @@ package org.apache.shardingsphere.proxy.frontend.postgresql;
 import lombok.Getter;
 import org.apache.shardingsphere.db.protocol.codec.DatabasePacketCodecEngine;
 import org.apache.shardingsphere.db.protocol.postgresql.codec.PostgreSQLPacketCodecEngine;
-import org.apache.shardingsphere.db.protocol.postgresql.constant.PostgreSQLServerInfo;
-import org.apache.shardingsphere.db.protocol.postgresql.packet.PostgreSQLPacket;
-import org.apache.shardingsphere.dialect.exception.transaction.InTransactionException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.transaction.InTransactionException;
 import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.frontend.authentication.AuthenticationEngine;
-import org.apache.shardingsphere.proxy.frontend.command.CommandExecuteEngine;
 import org.apache.shardingsphere.proxy.frontend.postgresql.authentication.PostgreSQLAuthenticationEngine;
 import org.apache.shardingsphere.proxy.frontend.postgresql.command.PostgreSQLCommandExecuteEngine;
 import org.apache.shardingsphere.proxy.frontend.postgresql.command.PostgreSQLPortalContextRegistry;
@@ -39,14 +36,9 @@ public final class PostgreSQLFrontendEngine implements DatabaseProtocolFrontendE
     
     private final AuthenticationEngine authenticationEngine = new PostgreSQLAuthenticationEngine();
     
-    private final CommandExecuteEngine commandExecuteEngine = new PostgreSQLCommandExecuteEngine();
+    private final PostgreSQLCommandExecuteEngine commandExecuteEngine = new PostgreSQLCommandExecuteEngine();
     
-    private final DatabasePacketCodecEngine<PostgreSQLPacket> codecEngine = new PostgreSQLPacketCodecEngine();
-    
-    @Override
-    public void setDatabaseVersion(final String databaseName, final String databaseVersion) {
-        PostgreSQLServerInfo.setServerVersion(databaseVersion);
-    }
+    private final DatabasePacketCodecEngine codecEngine = new PostgreSQLPacketCodecEngine();
     
     @Override
     public void release(final ConnectionSession connectionSession) {
@@ -55,13 +47,13 @@ public final class PostgreSQLFrontendEngine implements DatabaseProtocolFrontendE
     
     @Override
     public void handleException(final ConnectionSession connectionSession, final Exception exception) {
-        if (connectionSession.getTransactionStatus().isInTransaction() && !connectionSession.getTransactionStatus().isRollbackOnly() && !(exception instanceof InTransactionException)) {
-            connectionSession.getTransactionStatus().setRollbackOnly(true);
+        if (connectionSession.getTransactionStatus().isInTransaction() && !connectionSession.getTransactionStatus().isExceptionOccur() && !(exception instanceof InTransactionException)) {
+            connectionSession.getTransactionStatus().setExceptionOccur(true);
         }
     }
     
     @Override
-    public String getType() {
+    public String getDatabaseType() {
         return "PostgreSQL";
     }
 }

@@ -19,7 +19,7 @@ package org.apache.shardingsphere.sharding.algorithm.sharding.range;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Range;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.exception.algorithm.sharding.ShardingAlgorithmInitializationException;
 
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public final class BoundaryBasedRangeShardingAlgorithm extends AbstractRangeShar
         List<Long> partitionRanges = Splitter.on(",").trimResults().splitToList(props.getProperty(SHARDING_RANGES_KEY)).stream()
                 .map(this::parseLong).filter(Objects::nonNull).sorted().collect(Collectors.toList());
         ShardingSpherePreconditions.checkState(!partitionRanges.isEmpty(), () -> new ShardingAlgorithmInitializationException(getType(), "Sharding ranges can not be empty."));
-        Map<Integer, Range<Comparable<?>>> result = new HashMap<>(partitionRanges.size() + 1, 1);
+        Map<Integer, Range<Comparable<?>>> result = new HashMap<>(partitionRanges.size() + 1, 1F);
         for (int i = 0; i < partitionRanges.size(); i++) {
             Long rangeValue = partitionRanges.get(i);
             if (0 == i) {

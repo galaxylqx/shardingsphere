@@ -18,17 +18,17 @@
 package org.apache.shardingsphere.infra.merge.fixture.merger;
 
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.merge.engine.merger.ResultMerger;
 import org.apache.shardingsphere.infra.merge.engine.merger.ResultMergerEngine;
 import org.apache.shardingsphere.infra.merge.fixture.rule.MergerRuleFixture;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 
 public final class ResultMergerEngineFixture implements ResultMergerEngine<MergerRuleFixture> {
     
     @Override
     public ResultMerger newInstance(final String databaseName, final DatabaseType protocolType, final MergerRuleFixture rule, final ConfigurationProperties props,
-                                    final SQLStatementContext<?> sqlStatementContext) {
+                                    final SQLStatementContext sqlStatementContext) {
         return new ResultMergerFixture();
     }
     

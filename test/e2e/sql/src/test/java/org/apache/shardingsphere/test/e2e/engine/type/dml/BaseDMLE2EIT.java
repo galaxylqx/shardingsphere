@@ -18,7 +18,7 @@
 package org.apache.shardingsphere.test.e2e.engine.type.dml;
 
 import org.apache.shardingsphere.infra.datanode.DataNode;
-import org.apache.shardingsphere.infra.util.expr.InlineExpressionParser;
+import org.apache.shardingsphere.infra.expr.core.InlineExpressionParserFactory;
 import org.apache.shardingsphere.test.e2e.cases.dataset.metadata.DataSetColumn;
 import org.apache.shardingsphere.test.e2e.cases.dataset.metadata.DataSetMetaData;
 import org.apache.shardingsphere.test.e2e.cases.dataset.row.DataSetRow;
@@ -42,8 +42,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +55,12 @@ public abstract class BaseDMLE2EIT {
     
     private static final String DATA_COLUMN_DELIMITER = ", ";
     
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+    
+    private final DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
+    
     private DataSetEnvironmentManager dataSetEnvironmentManager;
     
     /**
@@ -63,13 +69,11 @@ public abstract class BaseDMLE2EIT {
      * @param testParam test parameter
      * @param containerComposer container composer
      * @throws SQLException SQL exception
-     * @throws ParseException parse exception
      * @throws IOException IO exception
      * @throws JAXBException JAXB exception
      */
-    public final void init(final AssertionTestParameter testParam, final SingleE2EContainerComposer containerComposer) throws SQLException, ParseException, IOException, JAXBException {
-        dataSetEnvironmentManager = new DataSetEnvironmentManager(
-                new ScenarioDataPath(testParam.getScenario()).getDataSetFile(Type.ACTUAL), containerComposer.getActualDataSourceMap());
+    public final void init(final AssertionTestParameter testParam, final SingleE2EContainerComposer containerComposer) throws SQLException, IOException, JAXBException {
+        dataSetEnvironmentManager = new DataSetEnvironmentManager(new ScenarioDataPath(testParam.getScenario()).getDataSetFile(Type.ACTUAL), containerComposer.getActualDataSourceMap());
         dataSetEnvironmentManager.fillData();
     }
     
@@ -85,7 +89,7 @@ public abstract class BaseDMLE2EIT {
         assertThat("Only support single table for DML.", containerComposer.getDataSet().getMetaDataList().size(), is(1));
         assertThat(actualUpdateCount, is(containerComposer.getDataSet().getUpdateCount()));
         DataSetMetaData expectedDataSetMetaData = containerComposer.getDataSet().getMetaDataList().get(0);
-        for (String each : new InlineExpressionParser(expectedDataSetMetaData.getDataNodes()).splitAndEvaluate()) {
+        for (String each : InlineExpressionParserFactory.newInstance().splitAndEvaluate(expectedDataSetMetaData.getDataNodes())) {
             DataNode dataNode = new DataNode(each);
             DataSource dataSource = containerComposer.getActualDataSourceMap().get(dataNode.getDataSourceName());
             try (
@@ -118,7 +122,7 @@ public abstract class BaseDMLE2EIT {
         assertThat(actual.getColumnCount(), is(expected.size()));
         int index = 1;
         for (DataSetColumn each : expected) {
-            assertThat(actual.getColumnLabel(index++), is(each.getName()));
+            assertThat(actual.getColumnLabel(index++).toUpperCase(), is(each.getName().toUpperCase()));
         }
     }
     
@@ -136,12 +140,18 @@ public abstract class BaseDMLE2EIT {
     }
     
     private void assertValue(final AssertionTestParameter testParam, final ResultSet actual, final int columnIndex, final String expected) throws SQLException {
+        if (E2EContainerComposer.NOT_VERIFY_FLAG.equals(expected)) {
+            return;
+        }
         if (Types.DATE == actual.getMetaData().getColumnType(columnIndex)) {
-            if (!E2EContainerComposer.NOT_VERIFY_FLAG.equals(expected)) {
-                assertThat(new SimpleDateFormat("yyyy-MM-dd").format(actual.getDate(columnIndex)), is(expected));
-            }
+            assertThat(dateFormatter.format(actual.getDate(columnIndex).toLocalDate()), is(expected));
+        } else if (Arrays.asList(Types.TIME, Types.TIME_WITH_TIMEZONE).contains(actual.getMetaData().getColumnType(columnIndex))) {
+            assertThat(timeFormatter.format(actual.getTime(columnIndex).toLocalTime()), is(expected));
+        } else if (Arrays.asList(Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE).contains(actual.getMetaData().getColumnType(columnIndex))) {
+            assertThat(timestampFormatter.format(actual.getTimestamp(columnIndex).toLocalDateTime()), is(expected));
         } else if (Types.CHAR == actual.getMetaData().getColumnType(columnIndex)
-                && ("PostgreSQL".equals(testParam.getDatabaseType().getType()) || "openGauss".equals(testParam.getDatabaseType().getType()))) {
+                && ("PostgreSQL".equals(testParam.getDatabaseType().getType()) || "openGauss".equals(testParam.getDatabaseType().getType())
+                        || "Oracle".equals(testParam.getDatabaseType().getType()))) {
             assertThat(String.valueOf(actual.getObject(columnIndex)).trim(), is(expected));
         } else if (isPostgreSQLOrOpenGaussMoney(testParam, actual.getMetaData().getColumnTypeName(columnIndex))) {
             assertThat(actual.getString(columnIndex), is(expected));

@@ -17,15 +17,15 @@
 
 package org.apache.shardingsphere.sharding.route.engine.validator.ddl.impl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.type.DatabaseTypeEngine;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseTypeRegistry;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
-import org.apache.shardingsphere.sharding.exception.metadata.IndexNotExistedException;
 import org.apache.shardingsphere.sharding.exception.connection.ShardingDDLRouteException;
+import org.apache.shardingsphere.sharding.exception.metadata.IndexNotExistedException;
 import org.apache.shardingsphere.sharding.route.engine.validator.ddl.ShardingDDLStatementValidator;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.ddl.index.IndexSegment;
@@ -40,16 +40,17 @@ import java.util.stream.Collectors;
 /**
  * Sharding drop index statement validator.
  */
-public final class ShardingDropIndexStatementValidator extends ShardingDDLStatementValidator<DropIndexStatement> {
+public final class ShardingDropIndexStatementValidator extends ShardingDDLStatementValidator {
     
     @Override
-    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext<DropIndexStatement> sqlStatementContext,
+    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                             final List<Object> params, final ShardingSphereDatabase database, final ConfigurationProperties props) {
-        if (DropIndexStatementHandler.ifExists(sqlStatementContext.getSqlStatement())) {
+        DropIndexStatement dropIndexStatement = (DropIndexStatement) sqlStatementContext.getSqlStatement();
+        if (DropIndexStatementHandler.ifExists(dropIndexStatement)) {
             return;
         }
-        String defaultSchemaName = DatabaseTypeEngine.getDefaultSchemaName(sqlStatementContext.getDatabaseType(), database.getName());
-        for (IndexSegment each : sqlStatementContext.getSqlStatement().getIndexes()) {
+        String defaultSchemaName = new DatabaseTypeRegistry(sqlStatementContext.getDatabaseType()).getDefaultSchemaName(database.getName());
+        for (IndexSegment each : dropIndexStatement.getIndexes()) {
             ShardingSphereSchema schema = each.getOwner().map(optional -> optional.getIdentifier().getValue())
                     .map(database::getSchema).orElseGet(() -> database.getSchema(defaultSchemaName));
             if (!isSchemaContainsIndex(schema, each)) {
@@ -59,19 +60,20 @@ public final class ShardingDropIndexStatementValidator extends ShardingDDLStatem
     }
     
     @Override
-    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext<DropIndexStatement> sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
+    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
                              final ShardingSphereDatabase database, final ConfigurationProperties props, final RouteContext routeContext) {
-        Collection<IndexSegment> indexSegments = sqlStatementContext.getSqlStatement().getIndexes();
-        Optional<String> logicTableName = DropIndexStatementHandler.getSimpleTableSegment(sqlStatementContext.getSqlStatement()).map(optional -> optional.getTableName().getIdentifier().getValue());
+        DropIndexStatement dropIndexStatement = (DropIndexStatement) sqlStatementContext.getSqlStatement();
+        Collection<IndexSegment> indexSegments = dropIndexStatement.getIndexes();
+        Optional<String> logicTableName = DropIndexStatementHandler.getSimpleTableSegment(dropIndexStatement).map(optional -> optional.getTableName().getIdentifier().getValue());
         if (logicTableName.isPresent()) {
             validateDropIndexRouteUnit(shardingRule, routeContext, indexSegments, logicTableName.get());
         } else {
-            String defaultSchemaName = DatabaseTypeEngine.getDefaultSchemaName(sqlStatementContext.getDatabaseType(), database.getName());
+            String defaultSchemaName = new DatabaseTypeRegistry(sqlStatementContext.getDatabaseType()).getDefaultSchemaName(database.getName());
             for (IndexSegment each : indexSegments) {
                 ShardingSphereSchema schema = each.getOwner().map(optional -> optional.getIdentifier().getValue())
                         .map(database::getSchema).orElseGet(() -> database.getSchema(defaultSchemaName));
                 logicTableName =
-                        schema.getAllTableNames().stream().filter(tableName -> schema.getTable(tableName).getIndexes().containsKey(each.getIndexName().getIdentifier().getValue())).findFirst();
+                        schema.getAllTableNames().stream().filter(tableName -> schema.getTable(tableName).containsIndex(each.getIndexName().getIdentifier().getValue())).findFirst();
                 logicTableName.ifPresent(optional -> validateDropIndexRouteUnit(shardingRule, routeContext, indexSegments, optional));
             }
         }

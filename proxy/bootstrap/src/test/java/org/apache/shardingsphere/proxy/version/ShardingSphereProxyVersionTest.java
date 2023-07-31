@@ -17,9 +17,8 @@
 
 package org.apache.shardingsphere.proxy.version;
 
-import org.apache.shardingsphere.db.protocol.mysql.constant.MySQLServerInfo;
-import org.apache.shardingsphere.infra.config.props.ConfigurationPropertyKey;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.db.protocol.constant.DatabaseProtocolServerInfo;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.resource.ShardingSphereResourceMetaData;
 import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
@@ -27,7 +26,6 @@ import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.test.mock.AutoMockExtension;
 import org.apache.shardingsphere.test.mock.StaticMockSettings;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -50,48 +48,43 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ShardingSphereProxyVersionTest {
     
-    @BeforeEach
-    void setUp() {
-        when(ProxyContext.getInstance().getContextManager().getMetaDataContexts().getMetaData().getProps().getValue(ConfigurationPropertyKey.PROXY_MYSQL_DEFAULT_VERSION)).thenReturn("5.7.22");
-    }
-    
     @Test
     void assertSetVersionWhenStorageTypeSameWithProtocolType() throws SQLException {
         ShardingSphereProxyVersion.setVersion(mockContextManager("MySQL", "5.7.22"));
-        assertThat(MySQLServerInfo.getServerVersion("foo_db"), startsWith("5.7.22"));
+        assertThat(DatabaseProtocolServerInfo.getProtocolVersion("foo_db", TypedSPILoader.getService(DatabaseType.class, "MySQL")), startsWith("5.7.22"));
     }
     
     @Test
     void assertSetVersionWhenStorageTypeDifferentWithProtocolType() throws SQLException {
         ShardingSphereProxyVersion.setVersion(mockContextManager("Oracle", "12.0.0"));
-        assertThat(MySQLServerInfo.getServerVersion("foo_db"), startsWith("5.7.22"));
+        assertThat(DatabaseProtocolServerInfo.getProtocolVersion("foo_db", TypedSPILoader.getService(DatabaseType.class, "MySQL")), startsWith("5.7.22"));
     }
     
-    private ContextManager mockContextManager(final String databaseType, final String databaseProductVersion) throws SQLException {
+    private ContextManager mockContextManager(final String databaseProductName, final String databaseProductVersion) throws SQLException {
         ContextManager result = mock(ContextManager.class, RETURNS_DEEP_STUBS);
-        ShardingSphereDatabase database = mockDatabase(databaseType, databaseProductVersion);
+        ShardingSphereDatabase database = mockDatabase(databaseProductName, databaseProductVersion);
         when(result.getMetaDataContexts().getMetaData().getDatabases()).thenReturn(Collections.singletonMap("foo_db", database));
         return result;
     }
     
-    private ShardingSphereDatabase mockDatabase(final String databaseType, final String databaseProductVersion) throws SQLException {
+    private ShardingSphereDatabase mockDatabase(final String databaseProductName, final String databaseProductVersion) throws SQLException {
         ShardingSphereDatabase result = mock(ShardingSphereDatabase.class);
         when(result.getName()).thenReturn("foo_db");
         when(result.getProtocolType()).thenReturn(TypedSPILoader.getService(DatabaseType.class, "MySQL"));
-        ShardingSphereResourceMetaData resourceMetaData = mockResourceMetaData(databaseType, databaseProductVersion);
+        ShardingSphereResourceMetaData resourceMetaData = mockResourceMetaData(databaseProductName, databaseProductVersion);
         when(result.getResourceMetaData()).thenReturn(resourceMetaData);
         return result;
     }
     
-    private ShardingSphereResourceMetaData mockResourceMetaData(final String databaseType, final String databaseProductVersion) throws SQLException {
+    private ShardingSphereResourceMetaData mockResourceMetaData(final String databaseProductName, final String databaseProductVersion) throws SQLException {
         ShardingSphereResourceMetaData result = mock(ShardingSphereResourceMetaData.class);
-        when(result.getStorageTypes()).thenReturn(Collections.singletonMap("foo_ds", TypedSPILoader.getService(DatabaseType.class, databaseType)));
-        DataSource dataSource = createDataSource(databaseType, databaseProductVersion);
+        when(result.getStorageTypes()).thenReturn(Collections.singletonMap("foo_ds", TypedSPILoader.getService(DatabaseType.class, databaseProductName)));
+        DataSource dataSource = createDataSource(databaseProductName, databaseProductVersion);
         when(result.getDataSources()).thenReturn(Collections.singletonMap("foo_ds", dataSource));
         return result;
     }
     
-    private static DataSource createDataSource(final String databaseProductName, final String databaseProductVersion) throws SQLException {
+    private DataSource createDataSource(final String databaseProductName, final String databaseProductVersion) throws SQLException {
         DataSource result = mock(DataSource.class);
         Connection connection = mock(Connection.class);
         DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);

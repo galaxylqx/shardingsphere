@@ -416,7 +416,6 @@ class ShardingPreparedStatementTest extends AbstractShardingDriverTest {
                 assertThat(resultSet.getString(3), is(status));
             }
         }
-        
         try (
                 Connection connection = getShardingSphereDataSource().getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(INSERT_ON_DUPLICATE_KEY_SQL);
@@ -507,7 +506,9 @@ class ShardingPreparedStatementTest extends AbstractShardingDriverTest {
     void assertExecuteSelectColumnGetResultSet() throws SQLException {
         try (PreparedStatement preparedStatement = getShardingSphereDataSource().getConnection().prepareStatement(SELECT_SQL_COLUMN_WITH_PARAMETER_MARKER)) {
             preparedStatement.setString(1, "item_id");
-            preparedStatement.executeQuery();
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                assertThat(resultSet.getMetaData().getColumnCount(), is(3));
+            }
         }
     }
     

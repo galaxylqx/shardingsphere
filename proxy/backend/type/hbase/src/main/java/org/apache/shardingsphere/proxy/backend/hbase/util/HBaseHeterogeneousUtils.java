@@ -20,8 +20,8 @@ package org.apache.shardingsphere.proxy.backend.hbase.util;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ShorthandProjection;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.segment.select.projection.impl.ShorthandProjection;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.item.ExpressionProjectionSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.item.ProjectionSegment;
 import java.util.regex.Matcher;
@@ -65,7 +65,7 @@ public final class HBaseHeterogeneousUtils {
         StringBuffer sb = new StringBuffer();
         while (matcher.find()) {
             found++;
-            Preconditions.checkState(found <= replacements.length, String.format("Missing replacement for '%s' at [%s].", target, found));
+            Preconditions.checkState(found <= replacements.length, "Missing replacement for '%s' at [%s].", target, found);
             matcher.appendReplacement(sb, Matcher.quoteReplacement(replacements[found - 1].toString()));
         }
         matcher.appendTail(sb);
@@ -79,6 +79,6 @@ public final class HBaseHeterogeneousUtils {
      * @return is use shorthand projection
      */
     public static boolean isUseShorthandProjection(final SelectStatementContext statementContext) {
-        return statementContext.getProjectionsContext().getProjections().stream().anyMatch(each -> each instanceof ShorthandProjection);
+        return statementContext.getProjectionsContext().getProjections().stream().anyMatch(ShorthandProjection.class::isInstance);
     }
 }

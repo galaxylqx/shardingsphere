@@ -20,7 +20,7 @@ package org.apache.shardingsphere.sharding.distsql.handler.update;
 import org.apache.shardingsphere.distsql.handler.exception.rule.MissingRequiredRuleException;
 import org.apache.shardingsphere.distsql.handler.update.RuleDefinitionAlterUpdater;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingAutoTableRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
@@ -45,6 +45,24 @@ public final class AlterShardingTableRuleStatementUpdater implements RuleDefinit
     @Override
     public ShardingRuleConfiguration buildToBeAlteredRuleConfiguration(final AlterShardingTableRuleStatement sqlStatement) {
         return ShardingTableRuleStatementConverter.convert(sqlStatement.getRules());
+    }
+    
+    @Override
+    public ShardingRuleConfiguration buildToBeDroppedRuleConfiguration(final ShardingRuleConfiguration currentRuleConfig, final ShardingRuleConfiguration toBeAlteredRuleConfig) {
+        ShardingRuleConfiguration result = new ShardingRuleConfiguration();
+        Collection<String> toBeAlteredShardingTableNames = toBeAlteredRuleConfig.getTables().stream().map(ShardingTableRuleConfiguration::getLogicTable).collect(Collectors.toSet());
+        for (ShardingAutoTableRuleConfiguration each : currentRuleConfig.getAutoTables()) {
+            if (toBeAlteredShardingTableNames.contains(each.getLogicTable())) {
+                result.getAutoTables().add(each);
+            }
+        }
+        Collection<String> toBeAlteredAutoTableNames = toBeAlteredRuleConfig.getAutoTables().stream().map(ShardingAutoTableRuleConfiguration::getLogicTable).collect(Collectors.toSet());
+        for (ShardingTableRuleConfiguration each : currentRuleConfig.getTables()) {
+            if (toBeAlteredAutoTableNames.contains(each.getLogicTable())) {
+                result.getTables().add(each);
+            }
+        }
+        return result;
     }
     
     @Override

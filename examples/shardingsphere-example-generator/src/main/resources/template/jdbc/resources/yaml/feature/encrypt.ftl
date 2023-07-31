@@ -19,19 +19,23 @@
     t_order:
       columns:
         status:
-          cipherColumn: status
-          encryptorName: string_encryptor
-          assistedQueryColumn: assisted_query_status
-          assistedQueryEncryptorName: string_encryptor
+          cipher: 
+            name: status
+            encryptorName: standard_encryptor
+          assistedQuery: 
+            name: status_assisted
+            encryptorName: assisted_encryptor
+    t_order_item:
+      columns:
         phone:
-          plainColumn: phone_plain
-          cipherColumn: phone
-          encryptorName: phone_encryptor
+          cipher: 
+            name: phone
+            encryptorName: standard_encryptor
 
   encryptors:
-    string_encryptor:
-      type: assistedTest
-    phone_encryptor:
+    standard_encryptor:
       type: AES
       props:
         aes-key-value: 123456
+    assisted_encryptor:
+      type: assistedTest

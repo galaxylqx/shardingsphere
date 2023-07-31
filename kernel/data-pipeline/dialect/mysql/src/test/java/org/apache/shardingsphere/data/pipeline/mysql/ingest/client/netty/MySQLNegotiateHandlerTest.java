@@ -22,13 +22,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.util.concurrent.Promise;
 import org.apache.shardingsphere.data.pipeline.mysql.ingest.client.ServerInfo;
+import org.apache.shardingsphere.data.pipeline.mysql.ingest.client.ServerVersion;
 import org.apache.shardingsphere.db.protocol.mysql.constant.MySQLAuthenticationMethod;
 import org.apache.shardingsphere.db.protocol.mysql.packet.generic.MySQLErrPacket;
 import org.apache.shardingsphere.db.protocol.mysql.packet.generic.MySQLOKPacket;
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLAuthenticationPluginData;
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLHandshakePacket;
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLHandshakeResponse41Packet;
-import org.apache.shardingsphere.dialect.mysql.vendor.MySQLVendorError;
+import org.apache.shardingsphere.infra.exception.mysql.vendor.MySQLVendorError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,7 +78,7 @@ class MySQLNegotiateHandlerTest {
     
     @Test
     void assertChannelReadHandshakeInitPacket() throws ReflectiveOperationException {
-        MySQLHandshakePacket handshakePacket = new MySQLHandshakePacket(0, new MySQLAuthenticationPluginData(new byte[8], new byte[12]));
+        MySQLHandshakePacket handshakePacket = new MySQLHandshakePacket(0, false, new MySQLAuthenticationPluginData(new byte[8], new byte[12]));
         handshakePacket.setAuthPluginName(MySQLAuthenticationMethod.NATIVE);
         mysqlNegotiateHandler.channelRead(channelHandlerContext, handshakePacket);
         verify(channel).writeAndFlush(ArgumentMatchers.any(MySQLHandshakeResponse41Packet.class));
@@ -91,7 +92,7 @@ class MySQLNegotiateHandlerTest {
     @Test
     void assertChannelReadOkPacket() throws ReflectiveOperationException {
         MySQLOKPacket okPacket = new MySQLOKPacket(0);
-        ServerInfo serverInfo = new ServerInfo();
+        ServerInfo serverInfo = new ServerInfo(new ServerVersion("5.5.0-log"));
         Plugins.getMemberAccessor().set(MySQLNegotiateHandler.class.getDeclaredField("serverInfo"), mysqlNegotiateHandler, serverInfo);
         mysqlNegotiateHandler.channelRead(channelHandlerContext, okPacket);
         verify(pipeline).remove(mysqlNegotiateHandler);

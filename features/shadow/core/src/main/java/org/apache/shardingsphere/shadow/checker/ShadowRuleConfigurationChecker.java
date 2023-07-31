@@ -20,7 +20,7 @@ package org.apache.shardingsphere.shadow.checker;
 import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration;
 import org.apache.shardingsphere.infra.config.rule.checker.RuleConfigurationChecker;
 import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.shadow.api.config.ShadowRuleConfiguration;
 import org.apache.shardingsphere.shadow.api.config.datasource.ShadowDataSourceConfiguration;
 import org.apache.shardingsphere.shadow.api.config.table.ShadowTableConfiguration;
@@ -43,7 +43,7 @@ import java.util.Set;
 public final class ShadowRuleConfigurationChecker implements RuleConfigurationChecker<ShadowRuleConfiguration> {
     
     @Override
-    public void check(final String databaseName, final ShadowRuleConfiguration config, final Map<String, DataSource> dataSourceMap, final Collection<ShardingSphereRule> rules) {
+    public void check(final String databaseName, final ShadowRuleConfiguration config, final Map<String, DataSource> dataSourceMap, final Collection<ShardingSphereRule> builtRules) {
         Map<String, ShadowDataSourceConfiguration> dataSources = initShadowDataSources(config.getDataSources());
         checkDataSources(dataSources, dataSourceMap, databaseName);
         Map<String, ShadowTableConfiguration> shadowTables = config.getTables();

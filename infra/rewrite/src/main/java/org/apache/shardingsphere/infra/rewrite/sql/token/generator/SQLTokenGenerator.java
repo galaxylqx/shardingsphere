@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.infra.rewrite.sql.token.generator;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 
 /**
  * SQL token generator.
@@ -30,5 +30,5 @@ public interface SQLTokenGenerator {
      * @param sqlStatementContext SQL statement context
      * @return is generate SQL token or not
      */
-    boolean isGenerateSQLToken(SQLStatementContext<?> sqlStatementContext);
+    boolean isGenerateSQLToken(SQLStatementContext sqlStatementContext);
 }

@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.test.e2e.showprocesslist.container.composer;
 
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.DockerITContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.ITContainers;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.adapter.AdapterContainer;
@@ -54,8 +54,8 @@ public final class ClusterShowProcessListContainerComposer implements AutoClosea
     public ClusterShowProcessListContainerComposer(final ShowProcessListTestParameter testParam) {
         containers = new ITContainers(testParam.getScenario());
         governanceContainer = isClusterMode(testParam.getRunMode()) ? containers.registerContainer(GovernanceContainerFactory.newInstance("ZooKeeper")) : null;
-        StorageContainer storageContainer = containers.registerContainer(StorageContainerFactory.newInstance(testParam.getDatabaseType(), "", testParam.getScenario(),
-                StorageContainerConfigurationFactory.newInstance(testParam.getDatabaseType())));
+        StorageContainer storageContainer = containers.registerContainer(StorageContainerFactory.newInstance(testParam.getDatabaseType(), "",
+                StorageContainerConfigurationFactory.newInstance(testParam.getDatabaseType(), testParam.getScenario())));
         AdaptorContainerConfiguration containerConfig = new AdaptorContainerConfiguration(testParam.getScenario(),
                 getMountedResources(testParam.getScenario(), testParam.getDatabaseType(), testParam.getRunMode(), testParam.getGovernanceCenter()), AdapterContainerUtils.getAdapterContainerImage());
         jdbcContainer = AdapterContainerFactory.newInstance(
@@ -73,7 +73,7 @@ public final class ClusterShowProcessListContainerComposer implements AutoClosea
     }
     
     private Map<String, String> getMountedResources(final String scenario, final DatabaseType databaseType, final String runMode, final String governanceCenter) {
-        Map<String, String> result = new HashMap<>(2, 1);
+        Map<String, String> result = new HashMap<>(2, 1F);
         result.put(isClusterMode(runMode) ? String.format("/env/common/cluster/proxy/%s/conf/", governanceCenter.toLowerCase())
                 : "/env/common/standalone/proxy/conf/", ProxyContainerConstants.CONFIG_PATH_IN_CONTAINER);
         result.put("/env/scenario/" + scenario + "/proxy/conf/" + databaseType.getType().toLowerCase(), ProxyContainerConstants.CONFIG_PATH_IN_CONTAINER);

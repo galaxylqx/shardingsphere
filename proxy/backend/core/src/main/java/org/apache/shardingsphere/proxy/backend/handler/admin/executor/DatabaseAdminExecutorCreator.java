@@ -17,17 +17,18 @@
 
 package org.apache.shardingsphere.proxy.backend.handler.admin.executor;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPI;
 import org.apache.shardingsphere.infra.util.spi.annotation.SingletonSPI;
-import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPI;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Database admin executor creator.
  */
 @SingletonSPI
-public interface DatabaseAdminExecutorCreator extends TypedSPI {
+public interface DatabaseAdminExecutorCreator extends DatabaseTypedSPI {
     
     /**
      * Create database admin executor, and this executor requires a connection containing a schema to be used.
@@ -35,7 +36,7 @@ public interface DatabaseAdminExecutorCreator extends TypedSPI {
      * @param sqlStatementContext SQL statement context
      * @return created instance
      */
-    Optional<DatabaseAdminExecutor> create(SQLStatementContext<?> sqlStatementContext);
+    Optional<DatabaseAdminExecutor> create(SQLStatementContext sqlStatementContext);
     
     /**
      * Create database admin executor.
@@ -43,7 +44,8 @@ public interface DatabaseAdminExecutorCreator extends TypedSPI {
      * @param sqlStatementContext SQL statement context
      * @param sql SQL
      * @param databaseName database name
+     * @param parameters parameters
      * @return created instance
      */
-    Optional<DatabaseAdminExecutor> create(SQLStatementContext<?> sqlStatementContext, String sql, String databaseName);
+    Optional<DatabaseAdminExecutor> create(SQLStatementContext sqlStatementContext, String sql, String databaseName, List<Object> parameters);
 }

@@ -20,12 +20,23 @@ package org.apache.shardingsphere.infra.datasource.pool.creator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.shardingsphere.infra.database.core.GlobalDataSourceRegistry;
+import org.apache.shardingsphere.infra.database.core.connector.url.JdbcUrl;
+import org.apache.shardingsphere.infra.database.core.connector.url.StandardJdbcUrlParser;
+import org.apache.shardingsphere.infra.database.core.connector.url.UnrecognizedDatabaseURLException;
+import org.apache.shardingsphere.infra.database.core.metadata.database.DialectDatabaseMetaData;
+import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPILoader;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseTypeFactory;
 import org.apache.shardingsphere.infra.datasource.pool.destroyer.DataSourcePoolDestroyer;
 import org.apache.shardingsphere.infra.datasource.pool.metadata.DataSourcePoolMetaData;
 import org.apache.shardingsphere.infra.datasource.pool.metadata.DataSourcePoolMetaDataReflection;
 import org.apache.shardingsphere.infra.datasource.props.DataSourceProperties;
 import org.apache.shardingsphere.infra.datasource.props.custom.CustomDataSourceProperties;
-import org.apache.shardingsphere.infra.datasource.registry.GlobalDataSourceRegistry;
+import org.apache.shardingsphere.infra.datasource.storage.StorageNodeProperties;
+import org.apache.shardingsphere.infra.datasource.storage.StorageResource;
+import org.apache.shardingsphere.infra.datasource.storage.StorageResourceWithProperties;
+import org.apache.shardingsphere.infra.datasource.storage.StorageUnit;
 import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 
 import javax.sql.DataSource;
@@ -39,6 +50,109 @@ import java.util.Optional;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DataSourcePoolCreator {
+    
+    /**
+     * Create storage resource.
+     *
+     * @param dataSourcePropsMap data source properties map
+     * @return created storage resource
+     */
+    public static StorageResource createStorageResource(final Map<String, DataSourceProperties> dataSourcePropsMap) {
+        return createStorageResource(dataSourcePropsMap, true);
+    }
+    
+    /**
+     * Create storage resource.
+     *
+     * @param dataSourcePropsMap data source properties map
+     * @param cacheEnabled cache enabled
+     * @return created storage resource
+     */
+    public static StorageResource createStorageResource(final Map<String, DataSourceProperties> dataSourcePropsMap, final boolean cacheEnabled) {
+        Map<String, DataSource> storageNodes = new LinkedHashMap<>();
+        Map<String, StorageUnit> storageUnits = new LinkedHashMap<>();
+        for (Entry<String, DataSourceProperties> entry : dataSourcePropsMap.entrySet()) {
+            StorageNodeProperties storageNodeProperties = getStorageNodeProperties(entry.getKey(), entry.getValue());
+            if (storageNodes.containsKey(storageNodeProperties.getName())) {
+                appendStorageUnit(storageUnits, storageNodeProperties, entry.getKey(), entry.getValue());
+                continue;
+            }
+            DataSource dataSource;
+            try {
+                dataSource = create(entry.getKey(), entry.getValue(), cacheEnabled);
+                // CHECKSTYLE:OFF
+            } catch (final RuntimeException ex) {
+                // CHECKSTYLE:ON
+                if (!cacheEnabled) {
+                    storageNodes.values().stream().map(DataSourcePoolDestroyer::new).forEach(DataSourcePoolDestroyer::asyncDestroy);
+                }
+                throw ex;
+            }
+            storageNodes.put(storageNodeProperties.getName(), dataSource);
+            appendStorageUnit(storageUnits, storageNodeProperties, entry.getKey(), entry.getValue());
+        }
+        return new StorageResource(storageNodes, storageUnits);
+    }
+    
+    /**
+     * Create storage resource without data source.
+     *
+     * @param dataSourcePropsMap data source properties map
+     * @return created storage resource
+     */
+    public static StorageResourceWithProperties createStorageResourceWithoutDataSource(final Map<String, DataSourceProperties> dataSourcePropsMap) {
+        Map<String, DataSource> storageNodes = new LinkedHashMap<>();
+        Map<String, StorageUnit> storageUnits = new LinkedHashMap<>();
+        Map<String, DataSourceProperties> dataSourcePropertiesMap = new LinkedHashMap<>();
+        for (Entry<String, DataSourceProperties> entry : dataSourcePropsMap.entrySet()) {
+            StorageNodeProperties storageNodeProperties = getStorageNodeProperties(entry.getKey(), entry.getValue());
+            if (storageNodes.containsKey(storageNodeProperties.getName())) {
+                appendStorageUnit(storageUnits, storageNodeProperties, entry.getKey(), entry.getValue());
+                continue;
+            }
+            storageNodes.put(storageNodeProperties.getName(), null);
+            appendStorageUnit(storageUnits, storageNodeProperties, entry.getKey(), entry.getValue());
+            dataSourcePropertiesMap.put(storageNodeProperties.getName(), entry.getValue());
+        }
+        return new StorageResourceWithProperties(storageNodes, storageUnits, dataSourcePropertiesMap);
+    }
+    
+    private static void appendStorageUnit(final Map<String, StorageUnit> storageUnits, final StorageNodeProperties storageNodeProperties,
+                                          final String unitName, final DataSourceProperties dataSourceProps) {
+        String url = dataSourceProps.getConnectionPropertySynonyms().getStandardProperties().get("url").toString();
+        storageUnits.put(unitName, getStorageUnit(storageNodeProperties, unitName, url));
+    }
+    
+    private static StorageUnit getStorageUnit(final StorageNodeProperties storageNodeProperties, final String unitName, final String url) {
+        DialectDatabaseMetaData dialectDatabaseMetaData = DatabaseTypedSPILoader.getService(DialectDatabaseMetaData.class, storageNodeProperties.getDatabaseType());
+        return dialectDatabaseMetaData.isInstanceConnectionAvailable()
+                ? new StorageUnit(unitName, storageNodeProperties.getName(), storageNodeProperties.getDatabase(), url)
+                : new StorageUnit(unitName, storageNodeProperties.getName(), url);
+    }
+    
+    private static StorageNodeProperties getStorageNodeProperties(final String dataSourceName, final DataSourceProperties dataSourceProperties) {
+        Map<String, Object> standardProperties = dataSourceProperties.getConnectionPropertySynonyms().getStandardProperties();
+        String url = standardProperties.get("url").toString();
+        String username = standardProperties.get("username").toString();
+        DatabaseType databaseType = DatabaseTypeFactory.get(url);
+        return getStorageNodeProperties(dataSourceName, dataSourceProperties, url, username, databaseType);
+    }
+    
+    private static StorageNodeProperties getStorageNodeProperties(final String dataSourceName, final DataSourceProperties dataSourceProperties,
+                                                                  final String url, final String username, final DatabaseType databaseType) {
+        try {
+            JdbcUrl jdbcUrl = new StandardJdbcUrlParser().parse(url);
+            DialectDatabaseMetaData dialectDatabaseMetaData = DatabaseTypedSPILoader.getService(DialectDatabaseMetaData.class, databaseType);
+            String nodeName = dialectDatabaseMetaData.isInstanceConnectionAvailable() ? generateStorageNodeName(jdbcUrl.getHostname(), jdbcUrl.getPort(), username) : dataSourceName;
+            return new StorageNodeProperties(nodeName, databaseType, dataSourceProperties, jdbcUrl.getDatabase());
+        } catch (final UnrecognizedDatabaseURLException ex) {
+            return new StorageNodeProperties(dataSourceName, databaseType, dataSourceProperties, null);
+        }
+    }
+    
+    private static String generateStorageNodeName(final String hostname, final int port, final String username) {
+        return String.format("%s_%s_%s", hostname, port, username);
+    }
     
     /**
      * Create data sources.
@@ -64,7 +178,7 @@ public final class DataSourcePoolCreator {
             try {
                 dataSource = create(entry.getKey(), entry.getValue(), cacheEnabled);
                 // CHECKSTYLE:OFF
-            } catch (final Exception ex) {
+            } catch (final RuntimeException ex) {
                 // CHECKSTYLE:ON
                 if (!cacheEnabled) {
                     result.values().stream().map(DataSourcePoolDestroyer::new).forEach(DataSourcePoolDestroyer::asyncDestroy);
@@ -107,8 +221,8 @@ public final class DataSourcePoolCreator {
      */
     public static DataSource create(final String dataSourceName, final DataSourceProperties dataSourceProps, final boolean cacheEnabled) {
         DataSource result = create(dataSourceProps);
-        if (cacheEnabled && !GlobalDataSourceRegistry.getInstance().getCachedDataSourceDataSources().containsKey(dataSourceName)) {
-            GlobalDataSourceRegistry.getInstance().getCachedDataSourceDataSources().put(dataSourceName, result);
+        if (cacheEnabled && !GlobalDataSourceRegistry.getInstance().getCachedDataSources().containsKey(dataSourceName)) {
+            GlobalDataSourceRegistry.getInstance().getCachedDataSources().put(dataSourceName, result);
         }
         return result;
     }

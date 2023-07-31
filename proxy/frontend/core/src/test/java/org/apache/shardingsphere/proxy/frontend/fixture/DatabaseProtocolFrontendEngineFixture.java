@@ -22,12 +22,11 @@ import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.frontend.authentication.AuthenticationEngine;
 import org.apache.shardingsphere.proxy.frontend.command.CommandExecuteEngine;
 import org.apache.shardingsphere.proxy.frontend.spi.DatabaseProtocolFrontendEngine;
-import org.apache.shardingsphere.test.fixture.infra.database.type.MockedDatabaseType;
 
 public final class DatabaseProtocolFrontendEngineFixture implements DatabaseProtocolFrontendEngine {
     
     @Override
-    public DatabasePacketCodecEngine<?> getCodecEngine() {
+    public DatabasePacketCodecEngine getCodecEngine() {
         return null;
     }
     
@@ -50,7 +49,7 @@ public final class DatabaseProtocolFrontendEngineFixture implements DatabaseProt
     }
     
     @Override
-    public String getType() {
-        return new MockedDatabaseType().getType();
+    public String getDatabaseType() {
+        return "FIXTURE";
     }
 }

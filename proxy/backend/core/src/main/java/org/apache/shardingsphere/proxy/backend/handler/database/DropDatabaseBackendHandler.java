@@ -21,10 +21,12 @@ import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import org.apache.shardingsphere.authority.checker.AuthorityChecker;
 import org.apache.shardingsphere.authority.rule.AuthorityRule;
-import org.apache.shardingsphere.dialect.exception.syntax.database.DatabaseDropNotExistsException;
-import org.apache.shardingsphere.dialect.exception.syntax.database.UnknownDatabaseException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.syntax.database.DatabaseDropNotExistsException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.syntax.database.UnknownDatabaseException;
+import org.apache.shardingsphere.infra.database.core.metadata.database.DialectDatabaseMetaData;
+import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPILoader;
 import org.apache.shardingsphere.infra.metadata.user.Grantee;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.backend.handler.ProxyBackendHandler;
 import org.apache.shardingsphere.proxy.backend.response.header.ResponseHeader;
@@ -46,9 +48,12 @@ public final class DropDatabaseBackendHandler implements ProxyBackendHandler {
     public ResponseHeader execute() {
         check(sqlStatement, connectionSession.getGrantee());
         if (isDropCurrentDatabase(sqlStatement.getDatabaseName())) {
+            checkSupportedDropCurrentDatabase(connectionSession);
             connectionSession.setCurrentDatabase(null);
         }
-        ProxyContext.getInstance().getContextManager().getInstanceContext().getModeContextManager().dropDatabase(sqlStatement.getDatabaseName());
+        if (ProxyContext.getInstance().databaseExists(sqlStatement.getDatabaseName())) {
+            ProxyContext.getInstance().getContextManager().getInstanceContext().getModeContextManager().dropDatabase(sqlStatement.getDatabaseName());
+        }
         return new UpdateResponseHeader(sqlStatement);
     }
     
@@ -62,5 +67,10 @@ public final class DropDatabaseBackendHandler implements ProxyBackendHandler {
     
     private boolean isDropCurrentDatabase(final String databaseName) {
         return !Strings.isNullOrEmpty(connectionSession.getDatabaseName()) && connectionSession.getDatabaseName().equals(databaseName);
+    }
+    
+    private void checkSupportedDropCurrentDatabase(final ConnectionSession connectionSession) {
+        DialectDatabaseMetaData dialectDatabaseMetaData = DatabaseTypedSPILoader.getService(DialectDatabaseMetaData.class, connectionSession.getProtocolType());
+        ShardingSpherePreconditions.checkState(!dialectDatabaseMetaData.getDefaultSchema().isPresent(), () -> new UnsupportedOperationException("cannot drop the currently open database"));
     }
 }

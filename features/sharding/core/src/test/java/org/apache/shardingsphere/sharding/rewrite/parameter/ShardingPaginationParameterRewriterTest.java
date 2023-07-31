@@ -17,9 +17,9 @@
 
 package org.apache.shardingsphere.sharding.rewrite.parameter;
 
-import org.apache.shardingsphere.infra.binder.segment.select.pagination.PaginationContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.InsertStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.segment.select.pagination.PaginationContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.InsertStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.rewrite.parameter.builder.impl.StandardParameterBuilder;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.sharding.rewrite.parameter.impl.ShardingPaginationParameterRewriter;
@@ -74,7 +74,7 @@ class ShardingPaginationParameterRewriterTest {
         addOffsetParametersFlag = false;
         addRowCountParameterFlag = false;
         StandardParameterBuilder standardParamBuilder = mock(StandardParameterBuilder.class);
-        doAnswer((Answer<Void>) ShardingPaginationParameterRewriterTest::mockAddReplacedParameters).when(standardParamBuilder).addReplacedParameters(anyInt(), anyLong());
+        doAnswer((Answer<Void>) this::mockAddReplacedParameters).when(standardParamBuilder).addReplacedParameters(anyInt(), anyLong());
         SelectStatementContext selectStatementContext = mock(SelectStatementContext.class);
         PaginationContext pagination = mock(PaginationContext.class);
         when(pagination.getOffsetParameterIndex()).thenReturn(Optional.of(TEST_OFFSET_PARAMETER_INDEX));
@@ -87,7 +87,7 @@ class ShardingPaginationParameterRewriterTest {
         assertTrue(addRowCountParameterFlag);
     }
     
-    private static Void mockAddReplacedParameters(final InvocationOnMock invocation) {
+    private Void mockAddReplacedParameters(final InvocationOnMock invocation) {
         int index = invocation.getArgument(0);
         long param = invocation.getArgument(1);
         if (index == TEST_OFFSET_PARAMETER_INDEX && param == TEST_REVISED_OFFSET) {

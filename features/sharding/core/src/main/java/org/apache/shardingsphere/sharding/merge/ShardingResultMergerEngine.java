@@ -17,10 +17,10 @@
 
 package org.apache.shardingsphere.sharding.merge;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.merge.engine.merger.ResultMerger;
 import org.apache.shardingsphere.infra.merge.engine.merger.ResultMergerEngine;
 import org.apache.shardingsphere.infra.merge.engine.merger.impl.TransparentResultMerger;
@@ -39,7 +39,7 @@ public final class ShardingResultMergerEngine implements ResultMergerEngine<Shar
     
     @Override
     public ResultMerger newInstance(final String databaseName, final DatabaseType protocolType, final ShardingRule shardingRule, final ConfigurationProperties props,
-                                    final SQLStatementContext<?> sqlStatementContext) {
+                                    final SQLStatementContext sqlStatementContext) {
         if (sqlStatementContext instanceof SelectStatementContext) {
             return new ShardingDQLResultMerger(protocolType);
         }

@@ -24,11 +24,11 @@ import org.apache.shardingsphere.distsql.handler.validate.DataSourcePropertiesVa
 import org.apache.shardingsphere.distsql.parser.segment.DataSourceSegment;
 import org.apache.shardingsphere.distsql.parser.segment.converter.DataSourceSegmentsConverter;
 import org.apache.shardingsphere.distsql.parser.statement.rdl.create.RegisterStorageUnitStatement;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.datasource.props.DataSourceProperties;
 import org.apache.shardingsphere.infra.rule.identifier.type.DataSourceContainedRule;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
-import org.apache.shardingsphere.infra.util.exception.external.server.ShardingSphereServerException;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.external.ShardingSphereExternalException;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.backend.response.header.ResponseHeader;
 import org.apache.shardingsphere.proxy.backend.response.header.update.UpdateResponseHeader;
@@ -74,7 +74,7 @@ public final class RegisterStorageUnitBackendHandler extends StorageUnitDefiniti
         validateHandler.validate(dataSourcePropsMap);
         try {
             ProxyContext.getInstance().getContextManager().getInstanceContext().getModeContextManager().registerStorageUnits(databaseName, dataSourcePropsMap);
-        } catch (final SQLException | ShardingSphereServerException ex) {
+        } catch (final SQLException | ShardingSphereExternalException ex) {
             log.error("Register storage unit failed", ex);
             throw new InvalidStorageUnitsException(Collections.singleton(ex.getMessage()));
         }
@@ -91,7 +91,7 @@ public final class RegisterStorageUnitBackendHandler extends StorageUnitDefiniti
     }
     
     private void checkDuplicatedDataSourceNames(final String databaseName, final Collection<String> dataSourceNames, final RegisterStorageUnitStatement sqlStatement) {
-        Collection<String> duplicatedDataSourceNames = new HashSet<>(sqlStatement.getStorageUnits().size(), 1);
+        Collection<String> duplicatedDataSourceNames = new HashSet<>(sqlStatement.getStorageUnits().size(), 1F);
         for (DataSourceSegment each : sqlStatement.getStorageUnits()) {
             if (dataSourceNames.contains(each.getName()) || getCurrentStorageUnitNames(databaseName).contains(each.getName())) {
                 duplicatedDataSourceNames.add(each.getName());

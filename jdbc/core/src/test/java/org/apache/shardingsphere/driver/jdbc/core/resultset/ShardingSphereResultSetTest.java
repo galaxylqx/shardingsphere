@@ -19,8 +19,8 @@ package org.apache.shardingsphere.driver.jdbc.core.resultset;
 
 import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSphereStatement;
-import org.apache.shardingsphere.infra.binder.segment.table.TablesContext;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.segment.table.TablesContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.executor.sql.context.ExecutionContext;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
@@ -391,14 +391,14 @@ class ShardingSphereResultSetTest {
     @Test
     void assertGetCharacterStreamWithColumnIndex() throws SQLException {
         Reader reader = mock(Reader.class);
-        when(mergeResultSet.getValue(1, Reader.class)).thenReturn(reader);
+        when(mergeResultSet.getCharacterStream(1)).thenReturn(reader);
         assertThat(shardingSphereResultSet.getCharacterStream(1), is(reader));
     }
     
     @Test
     void assertGetCharacterStreamWithColumnLabel() throws SQLException {
         Reader reader = mock(Reader.class);
-        when(mergeResultSet.getValue(1, Reader.class)).thenReturn(reader);
+        when(mergeResultSet.getCharacterStream(1)).thenReturn(reader);
         assertThat(shardingSphereResultSet.getCharacterStream("label"), is(reader));
     }
     

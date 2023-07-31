@@ -20,7 +20,7 @@ package org.apache.shardingsphere.sharding.distsql.handler.update;
 import org.apache.shardingsphere.distsql.handler.exception.rule.MissingRequiredRuleException;
 import org.apache.shardingsphere.distsql.handler.update.RuleDefinitionDropUpdater;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableReferenceRuleConfiguration;
 import org.apache.shardingsphere.sharding.distsql.parser.statement.DropShardingTableReferenceRuleStatement;
@@ -48,8 +48,8 @@ public final class DropShardingTableReferenceRuleStatementUpdater implements Rul
                 () -> new MissingRequiredRuleException("Sharding table reference", databaseName));
     }
     
-    private void checkToBeDroppedShardingTableReferenceRules(final String databaseName, final DropShardingTableReferenceRuleStatement sqlStatement,
-                                                             final ShardingRuleConfiguration currentRuleConfig) throws MissingRequiredRuleException {
+    private void checkToBeDroppedShardingTableReferenceRules(final String databaseName,
+                                                             final DropShardingTableReferenceRuleStatement sqlStatement, final ShardingRuleConfiguration currentRuleConfig) {
         if (sqlStatement.isIfExists()) {
             return;
         }
@@ -64,6 +64,15 @@ public final class DropShardingTableReferenceRuleStatementUpdater implements Rul
     
     private boolean containsIgnoreCase(final Collection<String> ruleNames, final String name) {
         return ruleNames.stream().anyMatch(each -> each.equalsIgnoreCase(name));
+    }
+    
+    @Override
+    public ShardingRuleConfiguration buildToBeDroppedRuleConfiguration(final ShardingRuleConfiguration currentRuleConfig, final DropShardingTableReferenceRuleStatement sqlStatement) {
+        ShardingRuleConfiguration result = new ShardingRuleConfiguration();
+        for (String each : sqlStatement.getNames()) {
+            result.getBindingTableGroups().add(new ShardingTableReferenceRuleConfiguration(each, ""));
+        }
+        return result;
     }
     
     @Override

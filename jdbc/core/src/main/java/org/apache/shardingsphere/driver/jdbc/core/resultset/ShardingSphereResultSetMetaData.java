@@ -20,20 +20,18 @@ package org.apache.shardingsphere.driver.jdbc.core.resultset;
 import lombok.RequiredArgsConstructor;
 import org.apache.shardingsphere.driver.jdbc.adapter.WrapperAdapter;
 import org.apache.shardingsphere.driver.jdbc.exception.syntax.ColumnIndexOutOfRangeException;
-import org.apache.shardingsphere.infra.binder.segment.select.projection.DerivedColumn;
-import org.apache.shardingsphere.infra.binder.segment.select.projection.Projection;
-import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.AggregationDistinctProjection;
-import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ColumnProjection;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
+import org.apache.shardingsphere.infra.binder.context.segment.select.projection.Projection;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.rule.identifier.type.DataNodeContainedRule;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * ShardingSphere result set meta data.
@@ -45,17 +43,14 @@ public final class ShardingSphereResultSetMetaData extends WrapperAdapter implem
     
     private final ShardingSphereDatabase database;
     
-    private final boolean transparentStatement;
+    private final boolean selectContainsEnhancedTable;
     
-    private final SQLStatementContext<?> sqlStatementContext;
+    private final SQLStatementContext sqlStatementContext;
     
     @Override
     public int getColumnCount() throws SQLException {
         if (sqlStatementContext instanceof SelectStatementContext) {
-            if (transparentStatement) {
-                return resultSetMetaData.getColumnCount();
-            }
-            if (hasSelectExpandProjections()) {
+            if (selectContainsEnhancedTable && hasSelectExpandProjections()) {
                 return ((SelectStatementContext) sqlStatementContext).getProjectionsContext().getExpandProjections().size();
             }
             return resultSetMetaData.getColumnCount();
@@ -100,33 +95,18 @@ public final class ShardingSphereResultSetMetaData extends WrapperAdapter implem
     
     @Override
     public String getColumnLabel(final int column) throws SQLException {
-        if (transparentStatement) {
-            return resultSetMetaData.getColumnLabel(column);
-        }
-        if (hasSelectExpandProjections()) {
+        if (selectContainsEnhancedTable && hasSelectExpandProjections()) {
             checkColumnIndex(column);
-            Projection projection = ((SelectStatementContext) sqlStatementContext).getProjectionsContext().getExpandProjections().get(column - 1);
-            if (projection instanceof AggregationDistinctProjection) {
-                return DerivedColumn.isDerivedColumnName(projection.getColumnLabel()) ? projection.getExpression() : projection.getColumnLabel();
-            }
+            return ((SelectStatementContext) sqlStatementContext).getProjectionsContext().getExpandProjections().get(column - 1).getColumnLabel();
         }
         return resultSetMetaData.getColumnLabel(column);
     }
     
     @Override
     public String getColumnName(final int column) throws SQLException {
-        if (transparentStatement) {
-            return resultSetMetaData.getColumnName(column);
-        }
-        if (hasSelectExpandProjections()) {
+        if (selectContainsEnhancedTable && hasSelectExpandProjections()) {
             checkColumnIndex(column);
-            Projection projection = ((SelectStatementContext) sqlStatementContext).getProjectionsContext().getExpandProjections().get(column - 1);
-            if (projection instanceof ColumnProjection) {
-                return ((ColumnProjection) projection).getName();
-            }
-            if (projection instanceof AggregationDistinctProjection) {
-                return DerivedColumn.isDerivedColumnName(projection.getColumnLabel()) ? projection.getExpression() : projection.getColumnLabel();
-            }
+            return ((SelectStatementContext) sqlStatementContext).getProjectionsContext().getExpandProjections().get(column - 1).getColumnName();
         }
         return resultSetMetaData.getColumnName(column);
     }
@@ -160,8 +140,18 @@ public final class ShardingSphereResultSetMetaData extends WrapperAdapter implem
     @Override
     public String getTableName(final int column) throws SQLException {
         String actualTableName = resultSetMetaData.getTableName(column);
-        Optional<DataNodeContainedRule> rule = database.getRuleMetaData().findSingleRule(DataNodeContainedRule.class);
-        return rule.isPresent() ? rule.get().findLogicTableByActualTable(actualTableName).orElse(actualTableName) : actualTableName;
+        Collection<DataNodeContainedRule> dataNodeContainedRules = database.getRuleMetaData().getRules().stream().filter(DataNodeContainedRule.class::isInstance)
+                .map(DataNodeContainedRule.class::cast).collect(Collectors.toList());
+        return decorateTableName(dataNodeContainedRules, actualTableName);
+    }
+    
+    private String decorateTableName(final Collection<DataNodeContainedRule> dataNodeContainedRules, final String actualTableName) {
+        for (DataNodeContainedRule each : dataNodeContainedRules) {
+            if (each.findLogicTableByActualTable(actualTableName).isPresent()) {
+                return each.findLogicTableByActualTable(actualTableName).get();
+            }
+        }
+        return actualTableName;
     }
     
     @Override

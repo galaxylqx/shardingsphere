@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.proxy.backend.hbase.result.query;
 
-import org.apache.shardingsphere.infra.binder.statement.dal.ShowTablesStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dal.ShowTablesStatementContext;
 import org.apache.shardingsphere.proxy.backend.hbase.exception.HBaseOperationException;
 import org.apache.shardingsphere.proxy.backend.hbase.result.HBaseSupportedSQLStatement;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.SQLStatement;
@@ -38,7 +38,7 @@ class HBaseListResultSetTest extends AbstractHBaseQueryResultSetTest {
     
     @Test
     void assertGetRowData() {
-        SQLStatement sqlStatement = HBaseSupportedSQLStatement.parseSQLStatement(HBaseSupportedSQLStatement.getShowTableStatement());
+        SQLStatement sqlStatement = HBaseSupportedSQLStatement.parseSQLStatement(HBaseSupportedSQLStatement.getShowTablesStatement());
         HBaseQueryResultSet resultSet = new HBaseListResultSet();
         ShowTablesStatementContext context = mock(ShowTablesStatementContext.class);
         when(context.getSqlStatement()).thenReturn((MySQLShowTablesStatement) sqlStatement);

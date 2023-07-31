@@ -28,7 +28,7 @@ import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLAuthMor
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLAuthSwitchRequestPacket;
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLHandshakePacket;
 import org.apache.shardingsphere.db.protocol.mysql.payload.MySQLPacketPayload;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnsupportedSQLOperationException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnsupportedSQLOperationException;
 
 import java.util.List;
 
@@ -43,7 +43,7 @@ public final class MySQLNegotiatePackageDecoder extends ByteToMessageDecoder {
     protected void decode(final ChannelHandlerContext ctx, final ByteBuf in, final List<Object> out) {
         MySQLPacketPayload payload = new MySQLPacketPayload(in, ctx.channel().attr(CommonConstants.CHARSET_ATTRIBUTE_KEY).get());
         if (handshakeReceived) {
-            MySQLPacket responsePacket = decodeResponsePacket(payload, out);
+            MySQLPacket responsePacket = decodeResponsePacket(payload);
             if (responsePacket instanceof MySQLOKPacket) {
                 ctx.channel().pipeline().remove(this);
             }
@@ -58,7 +58,7 @@ public final class MySQLNegotiatePackageDecoder extends ByteToMessageDecoder {
         return new MySQLHandshakePacket(payload);
     }
     
-    private MySQLPacket decodeResponsePacket(final MySQLPacketPayload payload, final List<Object> out) {
+    private MySQLPacket decodeResponsePacket(final MySQLPacketPayload payload) {
         int header = payload.getByteBuf().getByte(0) & 0xff;
         switch (header) {
             case MySQLErrPacket.HEADER:

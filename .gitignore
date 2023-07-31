@@ -12,7 +12,6 @@ pom.xml.versionsBackup
 
 # maven plugin ignore
 release.properties
-cobertura.ser
 *.gpg
 
 # eclipse ignore
@@ -49,3 +48,6 @@ Thumbs.db
 # antlr ignore
 gen/
 *.tokens
+
+# profiler ignore
+.profiler/

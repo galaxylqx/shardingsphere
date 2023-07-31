@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.sharding.route.engine.validator.dml.impl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
@@ -32,19 +32,19 @@ import java.util.List;
 /**
  * Sharding copy statement validator.
  */
-public final class ShardingCopyStatementValidator extends ShardingDMLStatementValidator<CopyStatement> {
+public final class ShardingCopyStatementValidator extends ShardingDMLStatementValidator {
     
     @Override
-    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext<CopyStatement> sqlStatementContext,
+    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                             final List<Object> params, final ShardingSphereDatabase database, final ConfigurationProperties props) {
-        String tableName = sqlStatementContext.getSqlStatement().getTableSegment().getTableName().getIdentifier().getValue();
+        String tableName = ((CopyStatement) sqlStatementContext.getSqlStatement()).getTableSegment().getTableName().getIdentifier().getValue();
         if (shardingRule.isShardingTable(tableName)) {
             throw new UnsupportedShardingOperationException("COPY", tableName);
         }
     }
     
     @Override
-    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext<CopyStatement> sqlStatementContext, final HintValueContext hintValueContext,
+    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext, final HintValueContext hintValueContext,
                              final List<Object> params, final ShardingSphereDatabase database, final ConfigurationProperties props, final RouteContext routeContext) {
     }
 }

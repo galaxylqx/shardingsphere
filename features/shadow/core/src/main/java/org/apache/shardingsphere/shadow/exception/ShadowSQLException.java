@@ -17,8 +17,8 @@
 
 package org.apache.shardingsphere.shadow.exception;
 
-import org.apache.shardingsphere.infra.util.exception.external.sql.sqlstate.SQLState;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.feature.FeatureSQLException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.sqlstate.SQLState;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.feature.FeatureSQLException;
 
 /**
  * Shadow SQL exception.
@@ -29,7 +29,7 @@ public abstract class ShadowSQLException extends FeatureSQLException {
     
     private static final int FEATURE_CODE = 8;
     
-    public ShadowSQLException(final SQLState sqlState, final int errorCode, final String reason, final Object... messageArgs) {
+    protected ShadowSQLException(final SQLState sqlState, final int errorCode, final String reason, final Object... messageArgs) {
         super(sqlState, FEATURE_CODE, errorCode, reason, messageArgs);
     }
 }

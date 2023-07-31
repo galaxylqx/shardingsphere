@@ -21,10 +21,12 @@ import lombok.SneakyThrows;
 import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSphereStatement;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.executor.sql.context.ExecutionContext;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
 import org.apache.shardingsphere.infra.rule.identifier.type.DataNodeContainedRule;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.parser.rule.SQLParserRule;
 import org.apache.shardingsphere.parser.rule.builder.DefaultSQLParserRuleConfigurationBuilder;
 import org.apache.shardingsphere.sqlfederation.rule.SQLFederationRule;
@@ -43,6 +45,7 @@ import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -142,13 +145,17 @@ class StatementAdapterTest {
     }
     
     @Test
-    void assertGetWarnings() {
-        assertNull(mockShardingSphereStatement().getWarnings());
+    void assertGetWarnings() throws SQLException {
+        try (ShardingSphereStatement actual = mockShardingSphereStatement()) {
+            assertNull(actual.getWarnings());
+        }
     }
     
     @Test
-    void assertClearWarnings() {
-        mockShardingSphereStatement().clearWarnings();
+    void assertClearWarnings() throws SQLException {
+        try (ShardingSphereStatement actual = mockShardingSphereStatement()) {
+            assertDoesNotThrow(actual::clearWarnings);
+        }
     }
     
     @Test
@@ -231,11 +238,13 @@ class StatementAdapterTest {
         ShardingSphereConnection connection = mock(ShardingSphereConnection.class, RETURNS_DEEP_STUBS);
         ShardingSphereRuleMetaData globalRuleMetaData = new ShardingSphereRuleMetaData(Arrays.asList(
                 new TrafficRule(new DefaultTrafficRuleConfigurationBuilder().build()),
-                new SQLFederationRule(new DefaultSQLFederationRuleConfigurationBuilder().build()),
+                new SQLFederationRule(new DefaultSQLFederationRuleConfigurationBuilder().build(), Collections.emptyMap(), mock(ConfigurationProperties.class)),
                 new SQLParserRule(new DefaultSQLParserRuleConfigurationBuilder().build())));
         when(connection.getContextManager().getMetaDataContexts().getMetaData().getGlobalRuleMetaData()).thenReturn(globalRuleMetaData);
         when(connection.getContextManager().getMetaDataContexts().getMetaData().getProps()).thenReturn(new ConfigurationProperties(new Properties()));
         when(connection.getDatabaseName()).thenReturn("db");
+        DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, "FIXTURE");
+        when(connection.getContextManager().getMetaDataContexts().getMetaData().getDatabase("db").getProtocolType()).thenReturn(databaseType);
         ShardingSphereStatement result = new ShardingSphereStatement(connection);
         result.getRoutedStatements().addAll(Arrays.asList(statements));
         return result;
@@ -247,9 +256,11 @@ class StatementAdapterTest {
         when(rule.isNeedAccumulate(any())).thenReturn(true);
         when(connection.getContextManager().getMetaDataContexts().getMetaData().getDatabase(DefaultDatabase.LOGIC_NAME).getRuleMetaData().getRules()).thenReturn(Collections.singleton(rule));
         when(connection.getDatabaseName()).thenReturn("db");
+        DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, "FIXTURE");
+        when(connection.getContextManager().getMetaDataContexts().getMetaData().getDatabase("db").getProtocolType()).thenReturn(databaseType);
         when(connection.getContextManager().getMetaDataContexts().getMetaData().getGlobalRuleMetaData()).thenReturn(new ShardingSphereRuleMetaData(Arrays.asList(
                 new TrafficRule(new DefaultTrafficRuleConfigurationBuilder().build()),
-                new SQLFederationRule(new DefaultSQLFederationRuleConfigurationBuilder().build()),
+                new SQLFederationRule(new DefaultSQLFederationRuleConfigurationBuilder().build(), Collections.emptyMap(), mock(ConfigurationProperties.class)),
                 new SQLParserRule(new DefaultSQLParserRuleConfigurationBuilder().build()))));
         when(connection.getContextManager().getMetaDataContexts().getMetaData().getProps()).thenReturn(new ConfigurationProperties(new Properties()));
         ShardingSphereStatement result = new ShardingSphereStatement(connection);

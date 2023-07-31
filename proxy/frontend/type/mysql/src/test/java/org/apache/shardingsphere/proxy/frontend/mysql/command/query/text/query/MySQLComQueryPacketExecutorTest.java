@@ -24,9 +24,10 @@ import org.apache.shardingsphere.db.protocol.mysql.packet.command.query.text.que
 import org.apache.shardingsphere.db.protocol.mysql.packet.generic.MySQLOKPacket;
 import org.apache.shardingsphere.db.protocol.packet.DatabasePacket;
 import org.apache.shardingsphere.infra.config.props.ConfigurationPropertyKey;
-import org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.logging.rule.LoggingRule;
 import org.apache.shardingsphere.logging.rule.builder.DefaultLoggingRuleConfigurationBuilder;
 import org.apache.shardingsphere.mode.manager.ContextManager;
@@ -86,7 +87,7 @@ class MySQLComQueryPacketExecutorTest {
     
     @BeforeEach
     void setUp() {
-        when(packet.getSql()).thenReturn("");
+        when(packet.getSQL()).thenReturn("");
         when(connectionSession.getAttributeMap().attr(MySQLConstants.MYSQL_CHARACTER_SET_ATTRIBUTE_KEY).get()).thenReturn(MySQLCharacterSet.UTF8MB4_GENERAL_CI);
     }
     
@@ -117,7 +118,7 @@ class MySQLComQueryPacketExecutorTest {
         when(connectionSession.getAttributeMap().hasAttr(MySQLConstants.MYSQL_OPTION_MULTI_STATEMENTS)).thenReturn(true);
         when(connectionSession.getAttributeMap().attr(MySQLConstants.MYSQL_OPTION_MULTI_STATEMENTS).get()).thenReturn(0);
         when(connectionSession.getDatabaseName()).thenReturn("foo_db");
-        when(packet.getSql()).thenReturn("update t set v=v+1 where id=1;update t set v=v+1 where id=2;update t set v=v+1 where id=3");
+        when(packet.getSQL()).thenReturn("update t set v=v+1 where id=1;update t set v=v+1 where id=2;update t set v=v+1 where id=3");
         ContextManager contextManager = mock(ContextManager.class);
         MetaDataContexts metaDataContexts = mockMetaDataContexts();
         when(contextManager.getMetaDataContexts()).thenReturn(metaDataContexts);
@@ -126,15 +127,16 @@ class MySQLComQueryPacketExecutorTest {
         MemberAccessor accessor = Plugins.getMemberAccessor();
         accessor.set(MySQLComQueryPacketExecutor.class.getDeclaredField("proxyBackendHandler"), actual, proxyBackendHandler);
         when(proxyBackendHandler.execute()).thenReturn(new UpdateResponseHeader(mock(SQLStatement.class)));
-        Collection<DatabasePacket<?>> actualPackets = actual.execute();
+        Collection<DatabasePacket> actualPackets = actual.execute();
         assertThat(actualPackets.size(), is(1));
         assertThat(actualPackets.iterator().next(), instanceOf(MySQLOKPacket.class));
     }
     
     private MetaDataContexts mockMetaDataContexts() {
+        DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, "MySQL");
         MetaDataContexts result = mock(MetaDataContexts.class, RETURNS_DEEP_STUBS);
-        when(result.getMetaData().getDatabase("foo_db").getResourceMetaData().getStorageTypes()).thenReturn(Collections.singletonMap("foo_ds", new MySQLDatabaseType()));
-        when(result.getMetaData().getDatabase("foo_db").getProtocolType()).thenReturn(new MySQLDatabaseType());
+        when(result.getMetaData().getDatabase("foo_db").getResourceMetaData().getStorageTypes()).thenReturn(Collections.singletonMap("foo_ds", databaseType));
+        when(result.getMetaData().getDatabase("foo_db").getProtocolType()).thenReturn(databaseType);
         ShardingSphereRuleMetaData globalRuleMetaData = new ShardingSphereRuleMetaData(
                 Arrays.asList(new SQLParserRule(new DefaultSQLParserRuleConfigurationBuilder().build()), new SQLTranslatorRule(new DefaultSQLTranslatorRuleConfigurationBuilder().build()),
                         new LoggingRule(new DefaultLoggingRuleConfigurationBuilder().build())));

@@ -18,11 +18,10 @@
 package org.apache.shardingsphere.driver.executor.batch;
 
 import lombok.SneakyThrows;
-import org.apache.shardingsphere.driver.jdbc.context.JDBCContext;
 import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
-import org.apache.shardingsphere.infra.binder.segment.table.TablesContext;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.binder.context.segment.table.TablesContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.executor.kernel.ExecutorEngine;
 import org.apache.shardingsphere.infra.executor.kernel.model.ExecutionGroup;
 import org.apache.shardingsphere.infra.executor.kernel.model.ExecutionGroupContext;
@@ -40,9 +39,8 @@ import org.apache.shardingsphere.mode.metadata.MetaDataContexts;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
 import org.apache.shardingsphere.traffic.rule.TrafficRule;
 import org.apache.shardingsphere.traffic.rule.builder.DefaultTrafficRuleConfigurationBuilder;
-import org.apache.shardingsphere.transaction.ShardingSphereTransactionManagerEngine;
 import org.apache.shardingsphere.transaction.api.TransactionType;
-import org.apache.shardingsphere.transaction.core.TransactionTypeHolder;
+import org.apache.shardingsphere.transaction.config.TransactionRuleConfiguration;
 import org.apache.shardingsphere.transaction.rule.TransactionRule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +62,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -85,15 +84,14 @@ class BatchPreparedStatementExecutorTest {
     private BatchPreparedStatementExecutor executor;
     
     @Mock
-    private SQLStatementContext<?> sqlStatementContext;
+    private SQLStatementContext sqlStatementContext;
     
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp() {
         SQLExecutorExceptionHandler.setExceptionThrown(true);
-        TransactionTypeHolder.set(TransactionType.LOCAL);
-        ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager(), mock(JDBCContext.class));
+        ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager());
         executor = new BatchPreparedStatementExecutor(
-                connection.getContextManager().getMetaDataContexts(), new JDBCExecutor(executorEngine, connection.getConnectionManager().getConnectionContext()), "foo_db");
+                connection.getContextManager().getMetaDataContexts(), new JDBCExecutor(executorEngine, connection.getDatabaseConnectionManager().getConnectionContext()), "foo_db");
         when(sqlStatementContext.getTablesContext()).thenReturn(mock(TablesContext.class));
     }
     
@@ -117,9 +115,7 @@ class BatchPreparedStatementExecutorTest {
     }
     
     private TransactionRule mockTransactionRule() {
-        TransactionRule result = mock(TransactionRule.class);
-        when(result.getResource()).thenReturn(new ShardingSphereTransactionManagerEngine());
-        return result;
+        return new TransactionRule(new TransactionRuleConfiguration(TransactionType.LOCAL.name(), "", new Properties()), Collections.emptyMap());
     }
     
     private ShardingRule mockShardingRule() {
@@ -129,7 +125,7 @@ class BatchPreparedStatementExecutorTest {
     }
     
     private Map<String, DataSource> mockDataSourceMap() {
-        Map<String, DataSource> result = new LinkedHashMap<>(2, 1);
+        Map<String, DataSource> result = new LinkedHashMap<>(2, 1F);
         DataSource dataSource = mock(DataSource.class, RETURNS_DEEP_STUBS);
         result.put("ds_0", dataSource);
         result.put("ds_1", dataSource);
@@ -139,7 +135,6 @@ class BatchPreparedStatementExecutorTest {
     @AfterEach
     void tearDown() {
         executorEngine.close();
-        TransactionTypeHolder.clear();
     }
     
     @Test

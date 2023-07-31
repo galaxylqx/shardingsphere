@@ -19,8 +19,10 @@ package org.apache.shardingsphere.infra.datasource.pool.creator;
 
 import com.google.common.base.CaseFormat;
 import lombok.SneakyThrows;
-import org.apache.shardingsphere.infra.database.metadata.DataSourceMetaData;
-import org.apache.shardingsphere.infra.database.type.DatabaseTypeEngine;
+import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPILoader;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseTypeFactory;
+import org.apache.shardingsphere.infra.database.core.connector.ConnectionProperties;
+import org.apache.shardingsphere.infra.database.core.connector.ConnectionPropertiesParser;
 import org.apache.shardingsphere.infra.datasource.pool.metadata.DataSourcePoolMetaData;
 import org.apache.shardingsphere.infra.datasource.pool.metadata.DataSourcePoolMetaDataReflection;
 import org.apache.shardingsphere.infra.datasource.pool.metadata.type.DefaultDataSourcePoolFieldMetaData;
@@ -43,12 +45,6 @@ import java.util.Properties;
  */
 public final class DataSourceReflection {
     
-    static {
-        GENERAL_CLASS_TYPES = new HashSet<>(
-                Arrays.asList(boolean.class, Boolean.class, int.class, Integer.class, long.class, Long.class, String.class, Collection.class, List.class, Properties.class));
-        SKIPPED_PROPERTY_KEYS = new HashSet<>(Arrays.asList("loginTimeout", "driverClassName"));
-    }
-    
     private static final Collection<Class<?>> GENERAL_CLASS_TYPES;
     
     private static final Collection<String> SKIPPED_PROPERTY_KEYS;
@@ -63,6 +59,12 @@ public final class DataSourceReflection {
     
     private final Method[] dataSourceMethods;
     
+    static {
+        GENERAL_CLASS_TYPES = new HashSet<>(
+                Arrays.asList(boolean.class, Boolean.class, int.class, Integer.class, long.class, Long.class, String.class, Collection.class, List.class, Properties.class));
+        SKIPPED_PROPERTY_KEYS = new HashSet<>(Arrays.asList("loginTimeout", "driverClassName"));
+    }
+    
     public DataSourceReflection(final DataSource dataSource) {
         this.dataSource = dataSource;
         dataSourceMethods = dataSource.getClass().getMethods();
@@ -76,7 +78,7 @@ public final class DataSourceReflection {
     public Map<String, Object> convertToProperties() {
         Map<String, Object> getterProps = convertToProperties(GETTER_PREFIX);
         Map<String, Object> isProps = convertToProperties(IS_PREFIX);
-        Map<String, Object> result = new LinkedHashMap<>(getterProps.size() + isProps.size(), 1);
+        Map<String, Object> result = new LinkedHashMap<>(getterProps.size() + isProps.size(), 1F);
         result.putAll(getterProps);
         result.putAll(isProps);
         return result;
@@ -85,7 +87,7 @@ public final class DataSourceReflection {
     @SneakyThrows(ReflectiveOperationException.class)
     private Map<String, Object> convertToProperties(final String prefix) {
         Collection<Method> getterMethods = findAllGetterMethods(prefix);
-        Map<String, Object> result = new LinkedHashMap<>(getterMethods.size(), 1);
+        Map<String, Object> result = new LinkedHashMap<>(getterMethods.size(), 1F);
         for (Method each : getterMethods) {
             String fieldName = getGetterFieldName(each, prefix);
             if (GENERAL_CLASS_TYPES.contains(each.getReturnType()) && !SKIPPED_PROPERTY_KEYS.contains(fieldName)) {
@@ -99,7 +101,7 @@ public final class DataSourceReflection {
     }
     
     private Collection<Method> findAllGetterMethods(final String methodPrefix) {
-        Collection<Method> result = new HashSet<>(dataSourceMethods.length);
+        Collection<Method> result = new HashSet<>(dataSourceMethods.length, 1F);
         for (Method each : dataSourceMethods) {
             if (each.getName().startsWith(methodPrefix) && 0 == each.getParameterTypes().length) {
                 result.add(each);
@@ -108,7 +110,7 @@ public final class DataSourceReflection {
         return result;
     }
     
-    private static String getGetterFieldName(final Method method, final String methodPrefix) {
+    private String getGetterFieldName(final Method method, final String methodPrefix) {
         return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring(methodPrefix.length()));
     }
     
@@ -166,9 +168,9 @@ public final class DataSourceReflection {
         if (!jdbcUrl.isPresent() || !jdbcConnectionProps.isPresent()) {
             return;
         }
-        DataSourceMetaData dataSourceMetaData = DatabaseTypeEngine.getDatabaseType(jdbcUrl.get()).getDataSourceMetaData(jdbcUrl.get(), null);
-        Properties queryProps = dataSourceMetaData.getQueryProperties();
-        for (Entry<Object, Object> entry : dataSourceMetaData.getDefaultQueryProperties().entrySet()) {
+        ConnectionProperties connectionProps = DatabaseTypedSPILoader.getService(ConnectionPropertiesParser.class, DatabaseTypeFactory.get(jdbcUrl.get())).parse(jdbcUrl.get(), null, null);
+        Properties queryProps = connectionProps.getQueryProperties();
+        for (Entry<Object, Object> entry : connectionProps.getDefaultQueryProperties().entrySet()) {
             String defaultPropertyKey = entry.getKey().toString();
             String defaultPropertyValue = entry.getValue().toString();
             if (!containsDefaultProperty(defaultPropertyKey, jdbcConnectionProps.get(), queryProps)) {

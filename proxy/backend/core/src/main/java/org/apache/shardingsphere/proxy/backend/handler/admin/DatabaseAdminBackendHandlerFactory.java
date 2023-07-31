@@ -19,15 +19,16 @@ package org.apache.shardingsphere.proxy.backend.handler.admin;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
-import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPILoader;
 import org.apache.shardingsphere.proxy.backend.handler.ProxyBackendHandler;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminExecutor;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminExecutorCreator;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminQueryExecutor;
 import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,8 +45,8 @@ public final class DatabaseAdminBackendHandlerFactory {
      * @param connectionSession connection session
      * @return created instance
      */
-    public static Optional<ProxyBackendHandler> newInstance(final DatabaseType databaseType, final SQLStatementContext<?> sqlStatementContext, final ConnectionSession connectionSession) {
-        Optional<DatabaseAdminExecutorCreator> executorCreator = TypedSPILoader.findService(DatabaseAdminExecutorCreator.class, databaseType.getType());
+    public static Optional<ProxyBackendHandler> newInstance(final DatabaseType databaseType, final SQLStatementContext sqlStatementContext, final ConnectionSession connectionSession) {
+        Optional<DatabaseAdminExecutorCreator> executorCreator = DatabaseTypedSPILoader.findService(DatabaseAdminExecutorCreator.class, databaseType);
         if (!executorCreator.isPresent()) {
             return Optional.empty();
         }
@@ -60,19 +61,20 @@ public final class DatabaseAdminBackendHandlerFactory {
      * @param sqlStatementContext SQL statement context
      * @param connectionSession connection session
      * @param sql SQL being executed
+     * @param parameters parameters
      * @return created instance
      */
-    public static Optional<ProxyBackendHandler> newInstance(final DatabaseType databaseType,
-                                                            final SQLStatementContext<?> sqlStatementContext, final ConnectionSession connectionSession, final String sql) {
-        Optional<DatabaseAdminExecutorCreator> executorCreator = TypedSPILoader.findService(DatabaseAdminExecutorCreator.class, databaseType.getType());
+    public static Optional<ProxyBackendHandler> newInstance(final DatabaseType databaseType, final SQLStatementContext sqlStatementContext,
+                                                            final ConnectionSession connectionSession, final String sql, final List<Object> parameters) {
+        Optional<DatabaseAdminExecutorCreator> executorCreator = DatabaseTypedSPILoader.findService(DatabaseAdminExecutorCreator.class, databaseType);
         if (!executorCreator.isPresent()) {
             return Optional.empty();
         }
-        Optional<DatabaseAdminExecutor> executor = executorCreator.get().create(sqlStatementContext, sql, connectionSession.getDatabaseName());
+        Optional<DatabaseAdminExecutor> executor = executorCreator.get().create(sqlStatementContext, sql, connectionSession.getDatabaseName(), parameters);
         return executor.map(optional -> createProxyBackendHandler(sqlStatementContext, connectionSession, optional));
     }
     
-    private static ProxyBackendHandler createProxyBackendHandler(final SQLStatementContext<?> sqlStatementContext, final ConnectionSession connectionSession, final DatabaseAdminExecutor executor) {
+    private static ProxyBackendHandler createProxyBackendHandler(final SQLStatementContext sqlStatementContext, final ConnectionSession connectionSession, final DatabaseAdminExecutor executor) {
         return executor instanceof DatabaseAdminQueryExecutor
                 ? new DatabaseAdminQueryBackendHandler(connectionSession, (DatabaseAdminQueryExecutor) executor)
                 : new DatabaseAdminUpdateBackendHandler(connectionSession, sqlStatementContext.getSqlStatement(), executor);

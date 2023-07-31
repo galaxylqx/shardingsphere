@@ -20,7 +20,7 @@ package org.apache.shardingsphere.driver.jdbc.adapter;
 import com.google.common.io.CharStreams;
 import lombok.Getter;
 import org.apache.shardingsphere.driver.jdbc.unsupported.AbstractUnsupportedOperationPreparedStatement;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnknownSQLException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnknownSQLException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -297,7 +297,7 @@ public abstract class AbstractPreparedStatementAdapter extends AbstractUnsupport
     }
     
     @FunctionalInterface
-    interface PreparedStatementInvocationReplayer {
+    private interface PreparedStatementInvocationReplayer {
         
         void replayOn(PreparedStatement preparedStatement) throws SQLException;
     }

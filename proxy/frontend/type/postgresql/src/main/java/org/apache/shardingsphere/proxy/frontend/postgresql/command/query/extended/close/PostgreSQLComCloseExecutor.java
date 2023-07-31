@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.shardingsphere.db.protocol.packet.DatabasePacket;
 import org.apache.shardingsphere.db.protocol.postgresql.packet.command.query.extended.close.PostgreSQLCloseCompletePacket;
 import org.apache.shardingsphere.db.protocol.postgresql.packet.command.query.extended.close.PostgreSQLComClosePacket;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnsupportedSQLOperationException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnsupportedSQLOperationException;
 import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.frontend.command.executor.CommandExecutor;
 import org.apache.shardingsphere.proxy.frontend.postgresql.command.PortalContext;
@@ -43,7 +43,7 @@ public final class PostgreSQLComCloseExecutor implements CommandExecutor {
     private final ConnectionSession connectionSession;
     
     @Override
-    public Collection<DatabasePacket<?>> execute() throws SQLException {
+    public Collection<DatabasePacket> execute() throws SQLException {
         switch (packet.getType()) {
             case PREPARED_STATEMENT:
                 connectionSession.getServerPreparedStatementRegistry().removePreparedStatement(packet.getName());
@@ -54,6 +54,6 @@ public final class PostgreSQLComCloseExecutor implements CommandExecutor {
             default:
                 throw new UnsupportedSQLOperationException(packet.getType().name());
         }
-        return Collections.singletonList(new PostgreSQLCloseCompletePacket());
+        return Collections.singleton(new PostgreSQLCloseCompletePacket());
     }
 }

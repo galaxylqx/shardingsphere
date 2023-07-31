@@ -38,10 +38,10 @@ import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLHandsha
 import org.apache.shardingsphere.db.protocol.mysql.packet.handshake.MySQLHandshakeResponse41Packet;
 import org.apache.shardingsphere.db.protocol.mysql.payload.MySQLPacketPayload;
 import org.apache.shardingsphere.db.protocol.payload.PacketPayload;
-import org.apache.shardingsphere.dialect.exception.syntax.database.UnknownDatabaseException;
-import org.apache.shardingsphere.dialect.mysql.exception.AccessDeniedException;
-import org.apache.shardingsphere.dialect.mysql.exception.DatabaseAccessDeniedException;
-import org.apache.shardingsphere.dialect.mysql.exception.HandshakeException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.syntax.database.UnknownDatabaseException;
+import org.apache.shardingsphere.infra.exception.mysql.exception.AccessDeniedException;
+import org.apache.shardingsphere.infra.exception.mysql.exception.DatabaseAccessDeniedException;
+import org.apache.shardingsphere.infra.exception.mysql.exception.HandshakeException;
 import org.apache.shardingsphere.infra.metadata.user.Grantee;
 import org.apache.shardingsphere.infra.metadata.user.ShardingSphereUser;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
@@ -52,7 +52,9 @@ import org.apache.shardingsphere.proxy.frontend.authentication.Authenticator;
 import org.apache.shardingsphere.proxy.frontend.authentication.AuthenticatorFactory;
 import org.apache.shardingsphere.proxy.frontend.connection.ConnectionIdGenerator;
 import org.apache.shardingsphere.proxy.frontend.mysql.authentication.authenticator.MySQLAuthenticatorType;
-import org.apache.shardingsphere.proxy.frontend.mysql.command.query.binary.MySQLStatementIDGenerator;
+import org.apache.shardingsphere.proxy.frontend.mysql.command.query.binary.MySQLStatementIdGenerator;
+import org.apache.shardingsphere.proxy.frontend.mysql.ssl.MySQLSSLRequestHandler;
+import org.apache.shardingsphere.proxy.frontend.ssl.ProxySSLContext;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -76,8 +78,12 @@ public final class MySQLAuthenticationEngine implements AuthenticationEngine {
     public int handshake(final ChannelHandlerContext context) {
         int result = ConnectionIdGenerator.getInstance().nextId();
         connectionPhase = MySQLConnectionPhase.AUTH_PHASE_FAST_PATH;
-        context.writeAndFlush(new MySQLHandshakePacket(result, authPluginData));
-        MySQLStatementIDGenerator.getInstance().registerConnection(result);
+        boolean sslEnabled = ProxySSLContext.getInstance().isSSLEnabled();
+        if (sslEnabled) {
+            context.pipeline().addFirst(MySQLSSLRequestHandler.class.getSimpleName(), new MySQLSSLRequestHandler());
+        }
+        context.writeAndFlush(new MySQLHandshakePacket(result, sslEnabled, authPluginData));
+        MySQLStatementIdGenerator.getInstance().registerConnection(result);
         return result;
     }
     

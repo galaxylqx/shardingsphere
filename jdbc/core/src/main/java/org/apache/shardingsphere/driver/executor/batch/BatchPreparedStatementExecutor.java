@@ -18,8 +18,8 @@
 package org.apache.shardingsphere.driver.executor.batch;
 
 import lombok.Getter;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.executor.kernel.model.ExecutionGroup;
 import org.apache.shardingsphere.infra.executor.kernel.model.ExecutionGroupContext;
 import org.apache.shardingsphere.infra.executor.kernel.model.ExecutionGroupReportContext;
@@ -133,10 +133,10 @@ public final class BatchPreparedStatementExecutor {
      * @return execute results
      * @throws SQLException SQL exception
      */
-    public int[] executeBatch(final SQLStatementContext<?> sqlStatementContext) throws SQLException {
+    public int[] executeBatch(final SQLStatementContext sqlStatementContext) throws SQLException {
         boolean isExceptionThrown = SQLExecutorExceptionHandler.isExceptionThrown();
         JDBCExecutorCallback<int[]> callback = new JDBCExecutorCallback<int[]>(metaDataContexts.getMetaData().getDatabase(databaseName).getProtocolType(),
-                metaDataContexts.getMetaData().getDatabase(databaseName).getResourceMetaData().getStorageTypes(), sqlStatementContext.getSqlStatement(), isExceptionThrown) {
+                metaDataContexts.getMetaData().getDatabase(databaseName).getResourceMetaData(), sqlStatementContext.getSqlStatement(), isExceptionThrown) {
             
             @Override
             protected int[] executeSQL(final String sql, final Statement statement, final ConnectionMode connectionMode, final DatabaseType storageType) throws SQLException {
@@ -156,7 +156,7 @@ public final class BatchPreparedStatementExecutor {
         return isNeedAccumulate(sqlStatementContext) ? accumulate(results) : results.get(0);
     }
     
-    private boolean isNeedAccumulate(final SQLStatementContext<?> sqlStatementContext) {
+    private boolean isNeedAccumulate(final SQLStatementContext sqlStatementContext) {
         for (ShardingSphereRule each : metaDataContexts.getMetaData().getDatabase(databaseName).getRuleMetaData().getRules()) {
             if (each instanceof DataNodeContainedRule && ((DataNodeContainedRule) each).isNeedAccumulate(sqlStatementContext.getTablesContext().getTableNames())) {
                 return true;
@@ -165,26 +165,32 @@ public final class BatchPreparedStatementExecutor {
         return false;
     }
     
-    private int[] accumulate(final List<int[]> results) {
+    private int[] accumulate(final List<int[]> executeResults) {
         int[] result = new int[batchCount];
         int count = 0;
         for (ExecutionGroup<JDBCExecutionUnit> each : executionGroupContext.getInputGroups()) {
             for (JDBCExecutionUnit eachUnit : each.getInputs()) {
-                Map<Integer, Integer> jdbcAndActualAddBatchCallTimesMap = Collections.emptyMap();
-                for (BatchExecutionUnit eachExecutionUnit : batchExecutionUnits) {
-                    if (isSameDataSourceAndSQL(eachExecutionUnit, eachUnit)) {
-                        jdbcAndActualAddBatchCallTimesMap = eachExecutionUnit.getJdbcAndActualAddBatchCallTimesMap();
-                        break;
-                    }
-                }
-                for (Entry<Integer, Integer> entry : jdbcAndActualAddBatchCallTimesMap.entrySet()) {
-                    int value = null == results.get(count) ? 0 : results.get(count)[entry.getValue()];
-                    result[entry.getKey()] += value;
-                }
+                accumulate(executeResults.get(count), result, eachUnit);
                 count++;
             }
         }
         return result;
+    }
+    
+    private void accumulate(final int[] executeResult, final int[] addBatchCounts, final JDBCExecutionUnit executionUnit) {
+        for (Entry<Integer, Integer> entry : getJDBCAndActualAddBatchCallTimesMap(executionUnit).entrySet()) {
+            int value = null == executeResult ? 0 : executeResult[entry.getValue()];
+            addBatchCounts[entry.getKey()] += value;
+        }
+    }
+    
+    private Map<Integer, Integer> getJDBCAndActualAddBatchCallTimesMap(final JDBCExecutionUnit executionUnit) {
+        for (BatchExecutionUnit each : batchExecutionUnits) {
+            if (isSameDataSourceAndSQL(each, executionUnit)) {
+                return each.getJdbcAndActualAddBatchCallTimesMap();
+            }
+        }
+        return Collections.emptyMap();
     }
     
     private boolean isSameDataSourceAndSQL(final BatchExecutionUnit batchExecutionUnit, final JDBCExecutionUnit jdbcExecutionUnit) {

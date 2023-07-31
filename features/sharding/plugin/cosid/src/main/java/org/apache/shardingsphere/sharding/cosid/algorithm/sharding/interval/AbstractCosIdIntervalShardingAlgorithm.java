@@ -22,7 +22,7 @@ import com.google.common.collect.Range;
 import me.ahoo.cosid.sharding.IntervalStep;
 import me.ahoo.cosid.sharding.IntervalTimeline;
 import me.ahoo.cosid.sharding.LocalDateTimeConvertor;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
@@ -109,9 +109,9 @@ public abstract class AbstractCosIdIntervalShardingAlgorithm<T extends Comparabl
         }
         if (shardingValue.hasLowerBound()) {
             LocalDateTime lower = localDateTimeConvertor.toLocalDateTime(shardingValue.lowerEndpoint());
-            return BoundType.OPEN.equals(shardingValue.lowerBoundType()) ? Range.greaterThan(lower) : Range.atLeast(lower);
+            return BoundType.OPEN == shardingValue.lowerBoundType() ? Range.greaterThan(lower) : Range.atLeast(lower);
         }
         LocalDateTime upper = localDateTimeConvertor.toLocalDateTime(shardingValue.upperEndpoint());
-        return BoundType.OPEN.equals(shardingValue.upperBoundType()) ? Range.lessThan(upper) : Range.atMost(upper);
+        return BoundType.OPEN == shardingValue.upperBoundType() ? Range.lessThan(upper) : Range.atMost(upper);
     }
 }

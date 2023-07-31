@@ -17,8 +17,8 @@
 
 package org.apache.shardingsphere.proxy.backend.opengauss.handler.admin;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminExecutor;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.item.ExpressionProjectionSegment;
 import org.junit.jupiter.api.Test;
@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -39,9 +39,29 @@ class OpenGaussAdminExecutorCreatorTest {
     @Test
     void assertCreateExecutorForSelectDatabase() {
         SelectStatementContext selectStatementContext = mock(SelectStatementContext.class, RETURNS_DEEP_STUBS);
-        when(selectStatementContext.getTablesContext().getTableNames().contains("pg_database")).thenReturn(true);
+        when(selectStatementContext.getTablesContext().getTableNames()).thenReturn(Collections.singletonList("pg_database"));
         Optional<DatabaseAdminExecutor> actual = new OpenGaussAdminExecutorCreator()
-                .create(selectStatementContext, "select datname, datcompatibility from pg_database where datname = 'sharding_db'", "postgres");
+                .create(selectStatementContext, "select datname, datcompatibility from pg_database where datname = 'sharding_db'", "postgres", Collections.emptyList());
+        assertTrue(actual.isPresent());
+        assertThat(actual.get(), instanceOf(OpenGaussSystemCatalogAdminQueryExecutor.class));
+    }
+    
+    @Test
+    void assertCreateExecutorForSelectTables() {
+        SelectStatementContext selectStatementContext = mock(SelectStatementContext.class, RETURNS_DEEP_STUBS);
+        when(selectStatementContext.getTablesContext().getTableNames()).thenReturn(Collections.singletonList("pg_tables"));
+        Optional<DatabaseAdminExecutor> actual = new OpenGaussAdminExecutorCreator()
+                .create(selectStatementContext, "select schemaname, tablename from pg_tables where schemaname = 'sharding_db'", "postgres", Collections.emptyList());
+        assertTrue(actual.isPresent());
+        assertThat(actual.get(), instanceOf(OpenGaussSystemCatalogAdminQueryExecutor.class));
+    }
+    
+    @Test
+    void assertCreateExecutorForSelectRoles() {
+        SelectStatementContext selectStatementContext = mock(SelectStatementContext.class, RETURNS_DEEP_STUBS);
+        when(selectStatementContext.getTablesContext().getTableNames()).thenReturn(Collections.singletonList("pg_roles"));
+        Optional<DatabaseAdminExecutor> actual = new OpenGaussAdminExecutorCreator()
+                .create(selectStatementContext, "select rolname from pg_roles", "postgres", Collections.emptyList());
         assertTrue(actual.isPresent());
         assertThat(actual.get(), instanceOf(OpenGaussSystemCatalogAdminQueryExecutor.class));
     }
@@ -50,7 +70,7 @@ class OpenGaussAdminExecutorCreatorTest {
     void assertCreateExecutorForSelectVersion() {
         SelectStatementContext selectStatementContext = mock(SelectStatementContext.class, RETURNS_DEEP_STUBS);
         when(selectStatementContext.getSqlStatement().getProjections().getProjections()).thenReturn(Collections.singletonList(new ExpressionProjectionSegment(-1, -1, "VERSION()")));
-        Optional<DatabaseAdminExecutor> actual = new OpenGaussAdminExecutorCreator().create(selectStatementContext, "select VERSION()", "postgres");
+        Optional<DatabaseAdminExecutor> actual = new OpenGaussAdminExecutorCreator().create(selectStatementContext, "select VERSION()", "postgres", Collections.emptyList());
         assertTrue(actual.isPresent());
         assertThat(actual.get(), instanceOf(OpenGaussSystemCatalogAdminQueryExecutor.class));
     }
@@ -58,14 +78,9 @@ class OpenGaussAdminExecutorCreatorTest {
     @Test
     void assertCreateOtherExecutor() {
         OpenGaussAdminExecutorCreator creator = new OpenGaussAdminExecutorCreator();
-        SQLStatementContext<?> sqlStatementContext = mock(SQLStatementContext.class, RETURNS_DEEP_STUBS);
+        SQLStatementContext sqlStatementContext = mock(SQLStatementContext.class, RETURNS_DEEP_STUBS);
         when(sqlStatementContext.getTablesContext().getTableNames()).thenReturn(Collections.emptyList());
         assertThat(creator.create(sqlStatementContext), is(Optional.empty()));
-        assertThat(creator.create(sqlStatementContext, "", ""), is(Optional.empty()));
-    }
-    
-    @Test
-    void assertGetType() {
-        assertThat(new OpenGaussAdminExecutorCreator().getType(), is("openGauss"));
+        assertThat(creator.create(sqlStatementContext, "", "", Collections.emptyList()), is(Optional.empty()));
     }
 }

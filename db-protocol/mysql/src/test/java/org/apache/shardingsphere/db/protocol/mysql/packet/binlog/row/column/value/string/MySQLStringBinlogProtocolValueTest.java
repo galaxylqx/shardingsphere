@@ -21,7 +21,7 @@ import io.netty.buffer.ByteBuf;
 import org.apache.shardingsphere.db.protocol.mysql.constant.MySQLBinaryColumnType;
 import org.apache.shardingsphere.db.protocol.mysql.packet.binlog.row.column.MySQLBinlogColumnDef;
 import org.apache.shardingsphere.db.protocol.mysql.payload.MySQLPacketPayload;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnsupportedSQLOperationException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnsupportedSQLOperationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,32 +49,32 @@ class MySQLStringBinlogProtocolValueTest {
     
     @BeforeEach
     void setUp() {
-        columnDef = new MySQLBinlogColumnDef(MySQLBinaryColumnType.MYSQL_TYPE_STRING);
+        columnDef = new MySQLBinlogColumnDef(MySQLBinaryColumnType.STRING);
     }
     
     @Test
     void assertReadEnumValueWithMeta1() {
-        columnDef.setColumnMeta((MySQLBinaryColumnType.MYSQL_TYPE_ENUM.getValue() << 8) + 1);
+        columnDef.setColumnMeta((MySQLBinaryColumnType.ENUM.getValue() << 8) + 1);
         when(payload.readInt1()).thenReturn(1);
         assertThat(new MySQLStringBinlogProtocolValue().read(columnDef, payload), is(1));
     }
     
     @Test
     void assertReadEnumValueWithMeta2() {
-        columnDef.setColumnMeta((MySQLBinaryColumnType.MYSQL_TYPE_ENUM.getValue() << 8) + 2);
+        columnDef.setColumnMeta((MySQLBinaryColumnType.ENUM.getValue() << 8) + 2);
         when(payload.readInt2()).thenReturn(32767);
         assertThat(new MySQLStringBinlogProtocolValue().read(columnDef, payload), is(32767));
     }
     
     @Test
     void assertReadEnumValueWithMetaFailure() {
-        columnDef.setColumnMeta((MySQLBinaryColumnType.MYSQL_TYPE_ENUM.getValue() << 8) + 3);
+        columnDef.setColumnMeta((MySQLBinaryColumnType.ENUM.getValue() << 8) + 3);
         assertThrows(UnsupportedSQLOperationException.class, () -> new MySQLStringBinlogProtocolValue().read(columnDef, payload));
     }
     
     @Test
     void assertReadSetValue() {
-        columnDef.setColumnMeta(MySQLBinaryColumnType.MYSQL_TYPE_SET.getValue() << 8);
+        columnDef.setColumnMeta(MySQLBinaryColumnType.SET.getValue() << 8);
         when(payload.getByteBuf()).thenReturn(byteBuf);
         when(byteBuf.readByte()).thenReturn((byte) 0xff);
         assertThat(new MySQLStringBinlogProtocolValue().read(columnDef, payload), is((byte) 0xff));
@@ -83,7 +83,7 @@ class MySQLStringBinlogProtocolValueTest {
     @Test
     void assertReadStringValue() {
         String expected = "test_value";
-        columnDef.setColumnMeta(MySQLBinaryColumnType.MYSQL_TYPE_STRING.getValue() << 8);
+        columnDef.setColumnMeta(MySQLBinaryColumnType.STRING.getValue() << 8);
         when(payload.getByteBuf()).thenReturn(byteBuf);
         when(byteBuf.readUnsignedByte()).thenReturn((short) expected.length());
         when(payload.readStringFixByBytes(expected.length())).thenReturn(expected.getBytes());
@@ -95,7 +95,7 @@ class MySQLStringBinlogProtocolValueTest {
     @Test
     void assertReadLongStringValue() {
         String expected = "test_value";
-        columnDef.setColumnMeta((MySQLBinaryColumnType.MYSQL_TYPE_STRING.getValue() ^ ((256 & 0x300) >> 4)) << 8);
+        columnDef.setColumnMeta((MySQLBinaryColumnType.STRING.getValue() ^ ((256 & 0x300) >> 4)) << 8);
         when(payload.getByteBuf()).thenReturn(byteBuf);
         when(byteBuf.readUnsignedShortLE()).thenReturn(expected.length());
         when(payload.readStringFixByBytes(expected.length())).thenReturn(expected.getBytes());
@@ -106,7 +106,7 @@ class MySQLStringBinlogProtocolValueTest {
     
     @Test
     void assertReadValueWithUnknownType() {
-        columnDef.setColumnMeta(MySQLBinaryColumnType.MYSQL_TYPE_VAR_STRING.getValue() << 8);
+        columnDef.setColumnMeta(MySQLBinaryColumnType.VAR_STRING.getValue() << 8);
         assertThrows(UnsupportedSQLOperationException.class, () -> new MySQLStringBinlogProtocolValue().read(columnDef, payload));
     }
 }

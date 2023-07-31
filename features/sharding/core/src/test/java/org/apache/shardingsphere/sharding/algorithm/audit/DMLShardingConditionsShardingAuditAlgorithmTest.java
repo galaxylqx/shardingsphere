@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.sharding.algorithm.audit;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.executor.audit.exception.SQLAuditException;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
@@ -67,26 +67,9 @@ class DMLShardingConditionsShardingAuditAlgorithmTest {
     }
     
     @Test
-    void assertAllBroadcastTablesCheck() {
-        when(sqlStatementContext.getSqlStatement()).thenReturn(mock(DMLStatement.class));
-        when(database.getRuleMetaData()).thenReturn(new ShardingSphereRuleMetaData(Collections.singletonList(rule)));
-        when(rule.isAllBroadcastTables(sqlStatementContext.getTablesContext().getTableNames())).thenReturn(true);
-        shardingAuditAlgorithm.check(sqlStatementContext, Collections.emptyList(), mock(Grantee.class), mock(ShardingSphereRuleMetaData.class), database);
-    }
-    
-    @Test
-    void assertNotAllShardingTablesCheck() {
-        when(sqlStatementContext.getSqlStatement()).thenReturn(mock(DMLStatement.class));
-        when(database.getRuleMetaData()).thenReturn(new ShardingSphereRuleMetaData(Collections.singletonList(rule)));
-        when(rule.isAllBroadcastTables(sqlStatementContext.getTablesContext().getTableNames())).thenReturn(false);
-        shardingAuditAlgorithm.check(sqlStatementContext, Collections.emptyList(), mock(Grantee.class), mock(ShardingSphereRuleMetaData.class), database);
-    }
-    
-    @Test
     void assertEmptyShardingConditionsCheck() {
         when(sqlStatementContext.getSqlStatement()).thenReturn(mock(DMLStatement.class));
         when(database.getRuleMetaData()).thenReturn(new ShardingSphereRuleMetaData(Collections.singletonList(rule)));
-        when(rule.isAllBroadcastTables(sqlStatementContext.getTablesContext().getTableNames())).thenReturn(false);
         when(rule.isShardingTable("t_order")).thenReturn(true);
         assertThrows(SQLAuditException.class, () -> shardingAuditAlgorithm.check(sqlStatementContext, Collections.emptyList(), mock(Grantee.class), mock(ShardingSphereRuleMetaData.class), database));
     }

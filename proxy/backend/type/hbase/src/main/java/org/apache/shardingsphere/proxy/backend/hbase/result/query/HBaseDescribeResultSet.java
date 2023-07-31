@@ -20,8 +20,8 @@ package org.apache.shardingsphere.proxy.backend.hbase.result.query;
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dal.ShowCreateTableStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dal.ShowCreateTableStatementContext;
 import org.apache.shardingsphere.proxy.backend.hbase.context.HBaseContext;
 import org.apache.shardingsphere.proxy.backend.hbase.executor.HBaseExecutor;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQLShowCreateTableStatement;
@@ -44,7 +44,7 @@ public final class HBaseDescribeResultSet implements HBaseQueryResultSet {
      * @param sqlStatementContext SQL statement context
      */
     @Override
-    public void init(final SQLStatementContext<?> sqlStatementContext) {
+    public void init(final SQLStatementContext sqlStatementContext) {
         ShowCreateTableStatementContext statementContext = (ShowCreateTableStatementContext) sqlStatementContext;
         String tableName = statementContext.getTablesContext().getTableNames().iterator().next();
         boolean isExists = HBaseExecutor.executeAdmin(HBaseContext.getInstance().getConnection(tableName), admin -> admin.tableExists(TableName.valueOf(tableName)));

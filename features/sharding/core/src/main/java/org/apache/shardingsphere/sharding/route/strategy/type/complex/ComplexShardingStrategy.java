@@ -22,7 +22,7 @@ import com.google.common.collect.Range;
 import lombok.Getter;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.datanode.DataNodeInfo;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.sharding.api.sharding.complex.ComplexKeysShardingValue;
 import org.apache.shardingsphere.sharding.exception.metadata.MissingRequiredShardingConfigurationException;
@@ -58,8 +58,8 @@ public final class ComplexShardingStrategy implements ShardingStrategy {
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<ShardingConditionValue> shardingConditionValues,
                                          final DataNodeInfo dataNodeInfo, final ConfigurationProperties props) {
-        Map<String, Collection<Comparable<?>>> columnShardingValues = new HashMap<>(shardingConditionValues.size(), 1);
-        Map<String, Range<Comparable<?>>> columnRangeValues = new HashMap<>(shardingConditionValues.size(), 1);
+        Map<String, Collection<Comparable<?>>> columnShardingValues = new HashMap<>(shardingConditionValues.size(), 1F);
+        Map<String, Range<Comparable<?>>> columnRangeValues = new HashMap<>(shardingConditionValues.size(), 1F);
         String logicTableName = "";
         for (ShardingConditionValue each : shardingConditionValues) {
             if (each instanceof ListShardingConditionValue) {

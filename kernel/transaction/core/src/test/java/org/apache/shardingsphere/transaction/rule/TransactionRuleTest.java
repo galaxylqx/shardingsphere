@@ -17,14 +17,13 @@
 
 package org.apache.shardingsphere.transaction.rule;
 
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
-import org.apache.shardingsphere.infra.database.type.dialect.OpenGaussDatabaseType;
-import org.apache.shardingsphere.infra.database.type.dialect.PostgreSQLDatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.resource.ShardingSphereResourceMetaData;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.fixture.jdbc.MockedDataSource;
-import org.apache.shardingsphere.transaction.config.TransactionRuleConfiguration;
 import org.apache.shardingsphere.transaction.api.TransactionType;
+import org.apache.shardingsphere.transaction.config.TransactionRuleConfiguration;
 import org.apache.shardingsphere.transaction.core.fixture.ShardingSphereTransactionManagerFixture;
 import org.junit.jupiter.api.Test;
 
@@ -91,7 +90,7 @@ class TransactionRuleTest {
         assertThat(actual.getResource().getTransactionManager(TransactionType.XA), instanceOf(ShardingSphereTransactionManagerFixture.class));
     }
     
-    private static ShardingSphereDatabase createDatabase() {
+    private ShardingSphereDatabase createDatabase() {
         ShardingSphereDatabase result = mock(ShardingSphereDatabase.class);
         ShardingSphereResourceMetaData resourceMetaData = createResourceMetaData();
         when(result.getResourceMetaData()).thenReturn(resourceMetaData);
@@ -99,20 +98,20 @@ class TransactionRuleTest {
         return result;
     }
     
-    private static ShardingSphereResourceMetaData createResourceMetaData() {
+    private ShardingSphereResourceMetaData createResourceMetaData() {
         ShardingSphereResourceMetaData result = mock(ShardingSphereResourceMetaData.class);
-        Map<String, DataSource> dataSourceMap = new LinkedHashMap<>(2, 1);
+        Map<String, DataSource> dataSourceMap = new LinkedHashMap<>(2, 1F);
         dataSourceMap.put("ds_0", new MockedDataSource());
         dataSourceMap.put("ds_1", new MockedDataSource());
         when(result.getDataSources()).thenReturn(dataSourceMap);
-        Map<String, DatabaseType> databaseTypes = new LinkedHashMap<>(2, 1);
-        databaseTypes.put("ds_0", new PostgreSQLDatabaseType());
-        databaseTypes.put("ds_1", new OpenGaussDatabaseType());
+        Map<String, DatabaseType> databaseTypes = new LinkedHashMap<>(2, 1F);
+        databaseTypes.put("ds_0", TypedSPILoader.getService(DatabaseType.class, "PostgreSQL"));
+        databaseTypes.put("ds_1", TypedSPILoader.getService(DatabaseType.class, "openGauss"));
         when(result.getStorageTypes()).thenReturn(databaseTypes);
         return result;
     }
     
-    private static ShardingSphereDatabase createAddDatabase() {
+    private ShardingSphereDatabase createAddDatabase() {
         ShardingSphereDatabase result = mock(ShardingSphereDatabase.class);
         ShardingSphereResourceMetaData resourceMetaData = createAddResourceMetaData();
         when(result.getResourceMetaData()).thenReturn(resourceMetaData);
@@ -120,20 +119,20 @@ class TransactionRuleTest {
         return result;
     }
     
-    private static ShardingSphereResourceMetaData createAddResourceMetaData() {
+    private ShardingSphereResourceMetaData createAddResourceMetaData() {
         ShardingSphereResourceMetaData result = mock(ShardingSphereResourceMetaData.class);
-        Map<String, DataSource> dataSourceMap = new LinkedHashMap<>(2, 1);
+        Map<String, DataSource> dataSourceMap = new LinkedHashMap<>(2, 1F);
         dataSourceMap.put("ds_0", new MockedDataSource());
         dataSourceMap.put("ds_1", new MockedDataSource());
         when(result.getDataSources()).thenReturn(dataSourceMap);
-        Map<String, DatabaseType> databaseTypes = new LinkedHashMap<>(2, 1);
-        databaseTypes.put("ds_0", new PostgreSQLDatabaseType());
-        databaseTypes.put("ds_1", new OpenGaussDatabaseType());
+        Map<String, DatabaseType> databaseTypes = new LinkedHashMap<>(2, 1F);
+        databaseTypes.put("ds_0", TypedSPILoader.getService(DatabaseType.class, "PostgreSQL"));
+        databaseTypes.put("ds_1", TypedSPILoader.getService(DatabaseType.class, "openGauss"));
         when(result.getStorageTypes()).thenReturn(databaseTypes);
         return result;
     }
     
-    private static TransactionRuleConfiguration createTransactionRuleConfiguration() {
+    private TransactionRuleConfiguration createTransactionRuleConfiguration() {
         TransactionRuleConfiguration result = mock(TransactionRuleConfiguration.class);
         when(result.getDefaultType()).thenReturn("XA");
         when(result.getProviderType()).thenReturn("Atomikos");

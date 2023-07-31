@@ -20,6 +20,7 @@ package org.apache.shardingsphere.proxy.backend.handler.distsql.ral.queryable;
 import lombok.SneakyThrows;
 import org.apache.shardingsphere.distsql.parser.statement.ral.queryable.ExportDatabaseConfigurationStatement;
 import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration;
+import org.apache.shardingsphere.infra.datasource.props.DataSourcePropertiesCreator;
 import org.apache.shardingsphere.infra.merge.result.impl.local.LocalDataQueryResultRow;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
@@ -38,7 +39,6 @@ import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -64,9 +64,9 @@ class ExportDatabaseConfigurationExecutorTest {
     }
     
     @Test
-    void assertExecute() throws SQLException {
+    void assertExecute() {
         when(database.getName()).thenReturn("normal_db");
-        when(database.getResourceMetaData().getDataSources()).thenReturn(createDataSourceMap());
+        when(database.getResourceMetaData().getDataSourcePropsMap()).thenReturn(DataSourcePropertiesCreator.create(createDataSourceMap()));
         when(database.getRuleMetaData().getConfigurations()).thenReturn(Collections.singleton(createShardingRuleConfiguration()));
         Collection<LocalDataQueryResultRow> actual = new ExportDatabaseConfigurationExecutor().getRows(database, new ExportDatabaseConfigurationStatement(mock(DatabaseSegment.class), null));
         assertThat(actual.size(), is(1));
@@ -77,7 +77,7 @@ class ExportDatabaseConfigurationExecutorTest {
     @Test
     void assertExecuteWithEmptyDatabase() {
         when(database.getName()).thenReturn("empty_db");
-        when(database.getResourceMetaData().getDataSources()).thenReturn(Collections.emptyMap());
+        when(database.getResourceMetaData().getDataSourcePropsMap()).thenReturn(Collections.emptyMap());
         when(database.getRuleMetaData().getConfigurations()).thenReturn(Collections.emptyList());
         ExportDatabaseConfigurationStatement sqlStatement = new ExportDatabaseConfigurationStatement(new DatabaseSegment(0, 0, new IdentifierValue("empty_db")), null);
         Collection<LocalDataQueryResultRow> actual = new ExportDatabaseConfigurationExecutor().getRows(database, sqlStatement);
@@ -87,7 +87,7 @@ class ExportDatabaseConfigurationExecutorTest {
     }
     
     private Map<String, DataSource> createDataSourceMap() {
-        Map<String, DataSource> result = new LinkedHashMap<>(2, 1);
+        Map<String, DataSource> result = new LinkedHashMap<>(2, 1F);
         result.put("ds_0", createDataSource("demo_ds_0"));
         result.put("ds_1", createDataSource("demo_ds_1"));
         return result;

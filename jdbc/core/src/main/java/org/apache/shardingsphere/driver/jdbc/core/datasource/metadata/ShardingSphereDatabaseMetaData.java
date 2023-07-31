@@ -21,8 +21,8 @@ import com.google.common.base.Strings;
 import org.apache.shardingsphere.driver.jdbc.adapter.AdaptedDatabaseMetaData;
 import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.driver.jdbc.core.resultset.DatabaseMetaDataResultSet;
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
-import org.apache.shardingsphere.infra.database.metadata.DataSourceMetaData;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
+import org.apache.shardingsphere.infra.database.core.connector.ConnectionProperties;
 import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
 import org.apache.shardingsphere.infra.rule.identifier.type.DataNodeContainedRule;
 
@@ -48,8 +48,8 @@ public final class ShardingSphereDatabaseMetaData extends AdaptedDatabaseMetaDat
     
     private DatabaseMetaData currentDatabaseMetaData;
     
-    public ShardingSphereDatabaseMetaData(final ShardingSphereConnection connection) {
-        super(connection.getJdbcContext().getCachedDatabaseMetaData());
+    public ShardingSphereDatabaseMetaData(final ShardingSphereConnection connection) throws SQLException {
+        super(connection.getDatabaseConnectionManager().getRandomConnection().getMetaData());
         this.connection = connection;
         rules = connection.getContextManager().getMetaDataContexts().getMetaData().getDatabase(connection.getDatabaseName()).getRuleMetaData().getRules();
     }
@@ -57,7 +57,7 @@ public final class ShardingSphereDatabaseMetaData extends AdaptedDatabaseMetaDat
     @Override
     public Connection getConnection() throws SQLException {
         if (null == currentPhysicalConnection) {
-            currentPhysicalConnection = connection.getConnectionManager().getRandomConnection();
+            currentPhysicalConnection = connection.getDatabaseConnectionManager().getRandomConnection();
         }
         return currentPhysicalConnection;
     }
@@ -214,7 +214,7 @@ public final class ShardingSphereDatabaseMetaData extends AdaptedDatabaseMetaDat
     }
     
     private Optional<DataNodeContainedRule> findDataNodeContainedRule() {
-        return rules.stream().filter(each -> each instanceof DataNodeContainedRule).findFirst().map(each -> (DataNodeContainedRule) each);
+        return rules.stream().filter(DataNodeContainedRule.class::isInstance).findFirst().map(DataNodeContainedRule.class::cast);
     }
     
     private ResultSet createDatabaseMetaDataResultSet(final ResultSet resultSet) throws SQLException {
@@ -222,20 +222,20 @@ public final class ShardingSphereDatabaseMetaData extends AdaptedDatabaseMetaDat
     }
     
     private String getActualCatalog(final String catalog) {
-        DataSourceMetaData metaData = connection.getContextManager()
-                .getMetaDataContexts().getMetaData().getDatabase(connection.getDatabaseName()).getResourceMetaData().getDataSourceMetaData(getDataSourceName());
-        return null != catalog && catalog.contains(DefaultDatabase.LOGIC_NAME) ? metaData.getCatalog() : catalog;
+        ConnectionProperties connectionProps = connection.getContextManager()
+                .getMetaDataContexts().getMetaData().getDatabase(connection.getDatabaseName()).getResourceMetaData().getConnectionProperties(getDataSourceName());
+        return null != catalog && catalog.contains(DefaultDatabase.LOGIC_NAME) ? connectionProps.getCatalog() : catalog;
     }
     
     private String getActualSchema(final String schema) {
-        DataSourceMetaData metaData = connection.getContextManager()
-                .getMetaDataContexts().getMetaData().getDatabase(connection.getDatabaseName()).getResourceMetaData().getDataSourceMetaData(getDataSourceName());
-        return null != schema && schema.contains(DefaultDatabase.LOGIC_NAME) ? metaData.getSchema() : schema;
+        ConnectionProperties connectionProps = connection.getContextManager()
+                .getMetaDataContexts().getMetaData().getDatabase(connection.getDatabaseName()).getResourceMetaData().getConnectionProperties(getDataSourceName());
+        return null != schema && schema.contains(DefaultDatabase.LOGIC_NAME) ? connectionProps.getSchema() : schema;
     }
     
     private String getDataSourceName() {
         if (null == currentPhysicalDataSourceName) {
-            currentPhysicalDataSourceName = connection.getConnectionManager().getRandomPhysicalDataSourceName();
+            currentPhysicalDataSourceName = connection.getDatabaseConnectionManager().getRandomPhysicalDataSourceName();
         }
         return currentPhysicalDataSourceName;
     }

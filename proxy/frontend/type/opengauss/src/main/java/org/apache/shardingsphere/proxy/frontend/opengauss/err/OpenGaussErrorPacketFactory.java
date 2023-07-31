@@ -22,10 +22,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.shardingsphere.db.protocol.opengauss.packet.command.generic.OpenGaussErrorResponsePacket;
 import org.apache.shardingsphere.db.protocol.postgresql.constant.PostgreSQLMessageSeverityLevel;
-import org.apache.shardingsphere.dialect.SQLExceptionTransformEngine;
-import org.apache.shardingsphere.dialect.exception.SQLDialectException;
-import org.apache.shardingsphere.dialect.postgresql.vendor.PostgreSQLVendorError;
-import org.apache.shardingsphere.infra.util.exception.external.sql.ShardingSphereSQLException;
+import org.apache.shardingsphere.infra.exception.dialect.SQLExceptionTransformEngine;
+import org.apache.shardingsphere.infra.exception.dialect.exception.SQLDialectException;
+import org.apache.shardingsphere.infra.exception.postgresql.vendor.PostgreSQLVendorError;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
+import org.apache.shardingsphere.infra.exception.core.external.sql.ShardingSphereSQLException;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.opengauss.util.PSQLException;
 
 import java.sql.SQLException;
@@ -47,7 +49,7 @@ public final class OpenGaussErrorPacketFactory {
             return new OpenGaussErrorResponsePacket(((PSQLException) cause).getServerErrorMessage());
         }
         if (cause instanceof SQLException || cause instanceof ShardingSphereSQLException || cause instanceof SQLDialectException) {
-            return createErrorResponsePacket(SQLExceptionTransformEngine.toSQLException(cause, "PostgreSQL"));
+            return createErrorResponsePacket(SQLExceptionTransformEngine.toSQLException(cause, TypedSPILoader.getService(DatabaseType.class, "PostgreSQL")));
         }
         // TODO OpenGauss need consider FrontendConnectionLimitException
         return createErrorResponsePacketForUnknownException(cause);

@@ -21,7 +21,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
 import org.apache.shardingsphere.infra.executor.sql.execute.engine.ConnectionMode;
 import org.apache.shardingsphere.infra.state.cluster.ClusterState;
 import org.apache.shardingsphere.infra.state.instance.InstanceState;
@@ -30,8 +30,6 @@ import org.apache.shardingsphere.parser.config.SQLParserRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sql.parser.api.CacheOption;
 import org.apache.shardingsphere.test.fixture.jdbc.MockedDataSource;
-import org.apache.shardingsphere.transaction.core.TransactionTypeHolder;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.configuration.plugins.Plugins;
 
@@ -52,11 +50,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ShardingSphereDataSourceTest {
-    
-    @AfterEach
-    void tearDown() {
-        TransactionTypeHolder.set(null);
-    }
     
     @Test
     void assertNewConstructorWithModeConfigurationOnly() throws Exception {
@@ -101,7 +94,7 @@ class ShardingSphereDataSourceTest {
         Connection connection = mock(Connection.class, RETURNS_DEEP_STUBS);
         when(connection.getMetaData().getURL()).thenReturn("jdbc:mock://127.0.0.1/foo_ds");
         try (ShardingSphereDataSource actual = createShardingSphereDataSource(new MockedDataSource(connection))) {
-            assertThat(((ShardingSphereConnection) actual.getConnection("", "")).getConnectionManager().getConnections("ds", 1, ConnectionMode.MEMORY_STRICTLY).get(0), is(connection));
+            assertThat(((ShardingSphereConnection) actual.getConnection("", "")).getDatabaseConnectionManager().getConnections("ds", 0, 1, ConnectionMode.MEMORY_STRICTLY).get(0), is(connection));
         }
     }
     
@@ -115,7 +108,6 @@ class ShardingSphereDataSourceTest {
             assertTrue(getContextManager(actual).getDataSourceMap(DefaultDatabase.LOGIC_NAME).isEmpty());
             assertThat(actual.getLoginTimeout(), is(0));
         }
-        
     }
     
     @Test
@@ -124,7 +116,6 @@ class ShardingSphereDataSourceTest {
             assertThat(getContextManager(actual).getDataSourceMap(DefaultDatabase.LOGIC_NAME).size(), is(1));
             assertThat(actual.getLoginTimeout(), is(15));
         }
-        
     }
     
     @Test
@@ -133,7 +124,6 @@ class ShardingSphereDataSourceTest {
             actual.setLoginTimeout(30);
             assertThat(actual.getLoginTimeout(), is(30));
         }
-        
     }
     
     @Test
@@ -141,10 +131,10 @@ class ShardingSphereDataSourceTest {
         try (HikariDataSource dataSource = createHikariDataSource()) {
             ShardingSphereDataSource actual = createShardingSphereDataSource(dataSource);
             actual.close();
-            Map<String, DataSource> dataSourceMap = getContextManager(actual).getDataSourceMap(DefaultDatabase.LOGIC_NAME);
+            Map<String, DataSource> dataSourceMap = getContextManager(actual).getMetaDataContexts().getMetaData()
+                    .getDatabase(DefaultDatabase.LOGIC_NAME).getResourceMetaData().getStorageNodeMetaData().getDataSources();
             assertTrue(((HikariDataSource) dataSourceMap.get("ds")).isClosed());
         }
-        
     }
     
     @Test
@@ -152,7 +142,8 @@ class ShardingSphereDataSourceTest {
         try (HikariDataSource dataSource = createHikariDataSource()) {
             ShardingSphereDataSource actual = createShardingSphereDataSource(dataSource);
             actual.close(Collections.singleton("ds"));
-            Map<String, DataSource> dataSourceMap = getContextManager(actual).getDataSourceMap(DefaultDatabase.LOGIC_NAME);
+            Map<String, DataSource> dataSourceMap = getContextManager(actual).getMetaDataContexts().getMetaData()
+                    .getDatabase(DefaultDatabase.LOGIC_NAME).getResourceMetaData().getStorageNodeMetaData().getDataSources();
             assertTrue(((HikariDataSource) dataSourceMap.get("ds")).isClosed());
         }
     }

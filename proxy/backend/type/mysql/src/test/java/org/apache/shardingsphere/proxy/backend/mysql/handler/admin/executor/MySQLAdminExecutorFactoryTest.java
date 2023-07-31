@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.proxy.backend.mysql.handler.admin.executor;
 
-import org.apache.shardingsphere.infra.binder.statement.CommonSQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.CommonSQLStatementContext;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminExecutor;
 import org.apache.shardingsphere.proxy.backend.mysql.handler.admin.MySQLAdminExecutorCreator;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQLShowFunctionStatusStatement;
@@ -35,7 +35,6 @@ import static org.mockito.Mockito.when;
 
 class MySQLAdminExecutorFactoryTest {
     
-    @SuppressWarnings("rawtypes")
     @Test
     void assertNewInstanceWithMySQLShowFunctionStatusStatement() {
         MySQLShowFunctionStatusStatement statement = mock(MySQLShowFunctionStatusStatement.class);
@@ -46,7 +45,6 @@ class MySQLAdminExecutorFactoryTest {
         assertThat(executor.get(), instanceOf(ShowFunctionStatusExecutor.class));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     void assertNewInstanceWithMySQLShowProcedureStatusStatement() {
         MySQLShowProcedureStatusStatement statement = mock(MySQLShowProcedureStatusStatement.class);
@@ -57,7 +55,6 @@ class MySQLAdminExecutorFactoryTest {
         assertThat(executor.get(), instanceOf(ShowProcedureStatusExecutor.class));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     void assertNewInstanceWithMySQLShowTablesStatement() {
         MySQLShowTablesStatement statement = mock(MySQLShowTablesStatement.class);

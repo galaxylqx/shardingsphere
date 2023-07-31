@@ -22,7 +22,7 @@ import org.apache.shardingsphere.encrypt.merge.dal.show.DecoratedEncryptShowCrea
 import org.apache.shardingsphere.encrypt.merge.dal.show.MergedEncryptShowColumnsMergedResult;
 import org.apache.shardingsphere.encrypt.merge.dal.show.MergedEncryptShowCreateTableMergedResult;
 import org.apache.shardingsphere.encrypt.rule.EncryptRule;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResult;
 import org.apache.shardingsphere.infra.merge.engine.decorator.ResultDecorator;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
@@ -38,7 +38,7 @@ import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQ
 public final class EncryptDALResultDecorator implements ResultDecorator<EncryptRule> {
     
     @Override
-    public MergedResult decorate(final QueryResult queryResult, final SQLStatementContext<?> sqlStatementContext, final EncryptRule rule) {
+    public MergedResult decorate(final QueryResult queryResult, final SQLStatementContext sqlStatementContext, final EncryptRule rule) {
         SQLStatement sqlStatement = sqlStatementContext.getSqlStatement();
         if (sqlStatement instanceof MySQLExplainStatement || sqlStatement instanceof MySQLShowColumnsStatement) {
             return new MergedEncryptShowColumnsMergedResult(queryResult, sqlStatementContext, rule);
@@ -50,7 +50,7 @@ public final class EncryptDALResultDecorator implements ResultDecorator<EncryptR
     }
     
     @Override
-    public MergedResult decorate(final MergedResult mergedResult, final SQLStatementContext<?> sqlStatementContext, final EncryptRule rule) {
+    public MergedResult decorate(final MergedResult mergedResult, final SQLStatementContext sqlStatementContext, final EncryptRule rule) {
         SQLStatement sqlStatement = sqlStatementContext.getSqlStatement();
         if (sqlStatement instanceof MySQLExplainStatement || sqlStatement instanceof MySQLShowColumnsStatement) {
             return new DecoratedEncryptShowColumnsMergedResult(mergedResult, sqlStatementContext, rule);

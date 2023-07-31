@@ -19,10 +19,10 @@ package org.apache.shardingsphere.proxy.backend.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.shardingsphere.encrypt.api.config.CompatibleEncryptRuleConfiguration;
 import org.apache.shardingsphere.encrypt.api.config.EncryptRuleConfiguration;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
 import org.apache.shardingsphere.infra.datasource.props.DataSourceProperties;
-import org.apache.shardingsphere.infra.datasource.props.DataSourcePropertiesCreator;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.util.spi.type.ordered.OrderedSPILoader;
 import org.apache.shardingsphere.infra.util.yaml.YamlEngine;
@@ -34,10 +34,11 @@ import org.apache.shardingsphere.shadow.api.config.ShadowRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.single.api.config.SingleRuleConfiguration;
 
-import javax.sql.DataSource;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map.Entry;
@@ -61,7 +62,7 @@ public final class ExportUtils {
         if (!file.exists()) {
             file.getParentFile().mkdirs();
         }
-        try (FileOutputStream output = new FileOutputStream(file)) {
+        try (OutputStream output = Files.newOutputStream(Paths.get(file.toURI()))) {
             output.write(exportedData.getBytes());
             output.flush();
         } catch (final IOException ex) {
@@ -88,21 +89,24 @@ public final class ExportUtils {
     }
     
     private static void appendDataSourceConfigurations(final ShardingSphereDatabase database, final StringBuilder stringBuilder) {
-        if (database.getResourceMetaData().getDataSources().isEmpty()) {
+        if (database.getResourceMetaData().getDataSourcePropsMap().isEmpty()) {
             return;
         }
         stringBuilder.append("dataSources:").append(System.lineSeparator());
-        for (Entry<String, DataSource> entry : database.getResourceMetaData().getDataSources().entrySet()) {
+        for (Entry<String, DataSourceProperties> entry : database.getResourceMetaData().getDataSourcePropsMap().entrySet()) {
             appendDataSourceConfiguration(entry.getKey(), entry.getValue(), stringBuilder);
         }
     }
     
-    private static void appendDataSourceConfiguration(final String name, final DataSource dataSource, final StringBuilder stringBuilder) {
-        stringBuilder.append("  ").append(name).append(":").append(System.lineSeparator());
-        DataSourceProperties dataSourceProps = DataSourcePropertiesCreator.create(dataSource);
+    private static void appendDataSourceConfiguration(final String name, final DataSourceProperties dataSourceProps, final StringBuilder stringBuilder) {
+        stringBuilder.append("  ").append(name).append(':').append(System.lineSeparator());
         dataSourceProps.getConnectionPropertySynonyms().getStandardProperties()
                 .forEach((key, value) -> stringBuilder.append("    ").append(key).append(": ").append(value).append(System.lineSeparator()));
-        dataSourceProps.getPoolPropertySynonyms().getStandardProperties().forEach((key, value) -> stringBuilder.append("    ").append(key).append(": ").append(value).append(System.lineSeparator()));
+        for (Entry<String, Object> entry : dataSourceProps.getPoolPropertySynonyms().getStandardProperties().entrySet()) {
+            if (null != entry.getValue()) {
+                stringBuilder.append("    ").append(entry.getKey()).append(": ").append(entry.getValue()).append(System.lineSeparator());
+            }
+        }
     }
     
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -127,6 +131,8 @@ public final class ExportUtils {
             return ((ReadwriteSplittingRuleConfiguration) ruleConfig).getDataSources().isEmpty();
         } else if (ruleConfig instanceof EncryptRuleConfiguration) {
             return ((EncryptRuleConfiguration) ruleConfig).getTables().isEmpty();
+        } else if (ruleConfig instanceof CompatibleEncryptRuleConfiguration) {
+            return ((CompatibleEncryptRuleConfiguration) ruleConfig).getTables().isEmpty();
         } else if (ruleConfig instanceof ShadowRuleConfiguration) {
             return ((ShadowRuleConfiguration) ruleConfig).getTables().isEmpty();
         } else if (ruleConfig instanceof MaskRuleConfiguration) {

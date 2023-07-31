@@ -36,7 +36,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
 
 @E2ETestCaseSettings(SQLCommandType.DCL)
 class DCLE2EIT {
@@ -44,20 +43,20 @@ class DCLE2EIT {
     @ParameterizedTest(name = "{0}")
     @EnabledIf("isEnabled")
     @ArgumentsSource(E2ETestCaseArgumentsProvider.class)
-    void assertExecuteUpdate(final AssertionTestParameter testParam) throws SQLException, ParseException, JAXBException, IOException {
+    void assertExecuteUpdate(final AssertionTestParameter testParam) throws SQLException, JAXBException, IOException {
         // TODO make sure test case can not be null
         if (null == testParam.getTestCaseContext()) {
             return;
         }
+        SingleE2EContainerComposer containerComposer = new SingleE2EContainerComposer(testParam);
         try (
-                SingleE2EContainerComposer containerComposer = new SingleE2EContainerComposer(testParam);
                 AuthorityEnvironmentManager ignored = new AuthorityEnvironmentManager(
                         new ScenarioCommonPath(testParam.getScenario()).getAuthorityFile(), containerComposer.getActualDataSourceMap(), testParam.getDatabaseType())) {
             assertExecuteUpdate(containerComposer);
         }
     }
     
-    private void assertExecuteUpdate(final SingleE2EContainerComposer containerComposer) throws ParseException, SQLException {
+    private void assertExecuteUpdate(final SingleE2EContainerComposer containerComposer) throws SQLException {
         String sql = containerComposer.getSQL();
         try (Connection connection = containerComposer.getTargetDataSource().getConnection()) {
             if (SQLExecuteType.Literal == containerComposer.getSqlExecuteType()) {
@@ -75,20 +74,20 @@ class DCLE2EIT {
     @ParameterizedTest(name = "{0}")
     @EnabledIf("isEnabled")
     @ArgumentsSource(E2ETestCaseArgumentsProvider.class)
-    void assertExecute(final AssertionTestParameter testParam) throws SQLException, ParseException, JAXBException, IOException {
+    void assertExecute(final AssertionTestParameter testParam) throws SQLException, JAXBException, IOException {
         // TODO make sure test case can not be null
         if (null == testParam.getTestCaseContext()) {
             return;
         }
+        SingleE2EContainerComposer containerComposer = new SingleE2EContainerComposer(testParam);
         try (
-                SingleE2EContainerComposer containerComposer = new SingleE2EContainerComposer(testParam);
                 AuthorityEnvironmentManager ignored = new AuthorityEnvironmentManager(
                         new ScenarioCommonPath(testParam.getScenario()).getAuthorityFile(), containerComposer.getActualDataSourceMap(), testParam.getDatabaseType())) {
             assertExecute(containerComposer);
         }
     }
     
-    private void assertExecute(final SingleE2EContainerComposer containerComposer) throws ParseException, SQLException {
+    private void assertExecute(final SingleE2EContainerComposer containerComposer) throws SQLException {
         String sql = containerComposer.getSQL();
         try (Connection connection = containerComposer.getTargetDataSource().getConnection()) {
             if (SQLExecuteType.Literal == containerComposer.getSqlExecuteType()) {

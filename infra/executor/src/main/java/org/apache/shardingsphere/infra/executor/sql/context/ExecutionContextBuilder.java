@@ -19,8 +19,8 @@ package org.apache.shardingsphere.infra.executor.sql.context;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.shardingsphere.infra.binder.segment.table.TablesContext;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.segment.table.TablesContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.rewrite.engine.result.GenericSQLRewriteResult;
 import org.apache.shardingsphere.infra.rewrite.engine.result.RouteSQLRewriteResult;
@@ -51,14 +51,14 @@ public final class ExecutionContextBuilder {
      * @param sqlStatementContext SQL statement context
      * @return execution contexts
      */
-    public static Collection<ExecutionUnit> build(final ShardingSphereDatabase database, final SQLRewriteResult sqlRewriteResult, final SQLStatementContext<?> sqlStatementContext) {
+    public static Collection<ExecutionUnit> build(final ShardingSphereDatabase database, final SQLRewriteResult sqlRewriteResult, final SQLStatementContext sqlStatementContext) {
         return sqlRewriteResult instanceof GenericSQLRewriteResult
                 ? build(database, (GenericSQLRewriteResult) sqlRewriteResult, sqlStatementContext)
                 : build((RouteSQLRewriteResult) sqlRewriteResult);
     }
     
     private static Collection<ExecutionUnit> build(final ShardingSphereDatabase database,
-                                                   final GenericSQLRewriteResult sqlRewriteResult, final SQLStatementContext<?> sqlStatementContext) {
+                                                   final GenericSQLRewriteResult sqlRewriteResult, final SQLStatementContext sqlStatementContext) {
         Collection<String> instanceDataSourceNames = database.getResourceMetaData().getAllInstanceDataSourceNames();
         if (instanceDataSourceNames.isEmpty()) {
             return Collections.emptyList();
@@ -68,7 +68,7 @@ public final class ExecutionContextBuilder {
     }
     
     private static Collection<ExecutionUnit> build(final RouteSQLRewriteResult sqlRewriteResult) {
-        Collection<ExecutionUnit> result = new LinkedHashSet<>(sqlRewriteResult.getSqlRewriteUnits().size(), 1f);
+        Collection<ExecutionUnit> result = new LinkedHashSet<>(sqlRewriteResult.getSqlRewriteUnits().size(), 1F);
         for (Entry<RouteUnit, SQLRewriteUnit> entry : sqlRewriteResult.getSqlRewriteUnits().entrySet()) {
             result.add(new ExecutionUnit(entry.getKey().getDataSourceMapper().getActualName(),
                     new SQLUnit(entry.getValue().getSql(), entry.getValue().getParameters(), getRouteTableRouteMappers(entry.getKey().getTableMappers()))));
@@ -87,7 +87,7 @@ public final class ExecutionContextBuilder {
         return result;
     }
     
-    private static List<RouteMapper> getGenericTableRouteMappers(final SQLStatementContext<?> sqlStatementContext) {
+    private static List<RouteMapper> getGenericTableRouteMappers(final SQLStatementContext sqlStatementContext) {
         TablesContext tablesContext = null;
         if (null != sqlStatementContext) {
             tablesContext = sqlStatementContext.getTablesContext();

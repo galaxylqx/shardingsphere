@@ -17,6 +17,11 @@
   -->
 
 <sql-parser-test-cases>
+    <set-parameter sql-case-id="set_user_variable">
+        <parameter-assign value="IF(@have_ndb=0,@drop_cmd,'SET @dummy = 0')">
+            <parameter name="@drop" />
+        </parameter-assign>
+    </set-parameter>
     <set-parameter sql-case-id="set_parameter_equal">
         <parameter-assign value="'value'">
             <parameter name="configuration_parameter" />
@@ -92,7 +97,7 @@
     </set-parameter>
     <set-parameter sql-case-id="set_names">
         <parameter-assign value="'utf8'">
-            <parameter name="charset" />
+            <parameter name="character_set_client" />
         </parameter-assign>
     </set-parameter>
     <set-resource-group sql-case-id="set_resource_group">
@@ -100,7 +105,7 @@
     </set-resource-group>
     <set-parameter sql-case-id="set_charset_mysql">
         <parameter-assign value="'utf8'">
-            <parameter name="charset" />
+            <parameter name="character_set_client" />
         </parameter-assign>
     </set-parameter>
     <set-parameter sql-case-id="set_charset_postgresql">

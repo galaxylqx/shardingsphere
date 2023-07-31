@@ -29,13 +29,12 @@ Configurable Properties:
 | *Name*                             | *DataType*                     | *Description*                                                                                                                                          | *Default Value*                    |
 |------------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
 | name                               | String                         | Readwrite-splitting data source name                                                                                                                   | -                                  |
-| writeDataSourceName                 | String                        | Write data source name                                                                                                                                 | -                                  |
-| readDataSourceNames                 | List\<String\>                | Read data sources list                                                                                                                                 | -                                  |
+| writeDataSourceName                | String                         | Write data source name                                                                                                                                 | -                                  |
+| readDataSourceNames                | List\<String\>                 | Read data sources list                                                                                                                                 | -                                  |
 | transactionalReadQueryStrategy (?) | TransactionalReadQueryStrategy | Routing strategy for read query within a transaction, values include: PRIMARY (to primary), FIXED (to fixed data source), DYNAMIC (to any data source) | DYNAMIC                            |
 | loadBalancerName (?)               | String                         | Load balance algorithm name of replica sources                                                                                                         | Round robin load balance algorithm |
 
 Please refer to [Built-in Load Balance Algorithm List](/en/user-manual/common-config/builtin-algorithm/load-balance) for details on algorithm types.
-Please refer to [Read-write splitting-Core features](/en/features/readwrite-splitting/) for more details about query consistent routing.
 
 ## Operating Procedures
 

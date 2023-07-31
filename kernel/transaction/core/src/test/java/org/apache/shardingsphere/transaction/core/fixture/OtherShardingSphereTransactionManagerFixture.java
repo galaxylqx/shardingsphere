@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.transaction.core.fixture;
 
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.transaction.api.TransactionType;
 import org.apache.shardingsphere.transaction.spi.ShardingSphereTransactionManager;
 
@@ -64,5 +64,10 @@ public final class OtherShardingSphereTransactionManagerFixture implements Shard
     
     @Override
     public void close() {
+    }
+    
+    @Override
+    public String getType() {
+        return TransactionType.XA.name();
     }
 }

@@ -17,12 +17,12 @@
 
 package org.apache.shardingsphere.proxy.backend.hbase.converter;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dal.FlushStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.DeleteStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.InsertStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.UpdateStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dal.FlushStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.DeleteStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.InsertStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.UpdateStatementContext;
 import org.apache.shardingsphere.proxy.backend.hbase.converter.type.HBaseDeleteOperationConverter;
 import org.apache.shardingsphere.proxy.backend.hbase.converter.type.HBaseInsertOperationConverter;
 import org.apache.shardingsphere.proxy.backend.hbase.converter.type.HBaseRegionReloadOperationConverter;
@@ -38,35 +38,35 @@ class HBaseOperationConverterFactoryTest {
     
     @Test
     void assertExecuteSelectStatement() {
-        SQLStatementContext<?> sqlStatementContext = mock(SelectStatementContext.class);
+        SQLStatementContext sqlStatementContext = mock(SelectStatementContext.class);
         HBaseOperationConverter converter = HBaseOperationConverterFactory.newInstance(sqlStatementContext);
         assertThat(converter, instanceOf(HBaseSelectOperationConverter.class));
     }
     
     @Test
     void assertExecuteInsertStatement() {
-        SQLStatementContext<?> sqlStatementContext = mock(InsertStatementContext.class);
+        SQLStatementContext sqlStatementContext = mock(InsertStatementContext.class);
         HBaseOperationConverter converter = HBaseOperationConverterFactory.newInstance(sqlStatementContext);
         assertThat(converter, instanceOf(HBaseInsertOperationConverter.class));
     }
     
     @Test
     void assertExecuteUpdateStatement() {
-        SQLStatementContext<?> sqlStatementContext = mock(UpdateStatementContext.class);
+        SQLStatementContext sqlStatementContext = mock(UpdateStatementContext.class);
         HBaseOperationConverter converter = HBaseOperationConverterFactory.newInstance(sqlStatementContext);
         assertThat(converter, instanceOf(HBaseUpdateOperationConverter.class));
     }
     
     @Test
     void assertExecuteDeleteStatement() {
-        SQLStatementContext<?> sqlStatementContext = mock(DeleteStatementContext.class);
+        SQLStatementContext sqlStatementContext = mock(DeleteStatementContext.class);
         HBaseOperationConverter converter = HBaseOperationConverterFactory.newInstance(sqlStatementContext);
         assertThat(converter, instanceOf(HBaseDeleteOperationConverter.class));
     }
     
     @Test
     void assertExecuteFlushStatement() {
-        SQLStatementContext<?> sqlStatementContext = mock(FlushStatementContext.class);
+        SQLStatementContext sqlStatementContext = mock(FlushStatementContext.class);
         HBaseOperationConverter converter = HBaseOperationConverterFactory.newInstance(sqlStatementContext);
         assertThat(converter, instanceOf(HBaseRegionReloadOperationConverter.class));
     }

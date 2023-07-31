@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.driver.jdbc.core;
 
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 
 import java.rmi.server.UID;
 import java.sql.SQLException;
@@ -50,7 +50,7 @@ public final class ShardingSphereSavepoint implements Savepoint {
         return savepointName;
     }
     
-    private static String getUniqueId() {
+    private String getUniqueId() {
         String uidStr = new UID().toString();
         int uidLength = uidStr.length();
         StringBuilder safeString = new StringBuilder(uidLength + 1);

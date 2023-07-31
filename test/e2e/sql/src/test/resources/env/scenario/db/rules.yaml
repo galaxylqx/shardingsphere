@@ -16,6 +16,9 @@
 #
 
 rules:
+- !SINGLE
+  tables:
+    - "*.*"
 - !SHARDING
   tables:
     t_order:
@@ -43,38 +46,13 @@ rules:
         standard:
           shardingColumn: user_id
           shardingAlgorithmName: it_standard_fixture
-    t_order_federate_sharding:
-      actualDataNodes: db_${0..1}.t_order_federate_sharding
-      databaseStrategy:
-        standard:
-          shardingColumn: order_id_sharding
-          shardingAlgorithmName: db_inline_order_id
-    t_order_item_federate_sharding:
-      actualDataNodes: db_${0..1}.t_order_item_federate_sharding
-      databaseStrategy:
-        standard:
-          shardingColumn: item_id
-          shardingAlgorithmName: db_inline_item_id
 
   bindingTables:
     - ref_0:t_order,t_order_item,t_order_details
-  broadcastTables:
-    - t_broadcast_table
-    - t_broadcast_table_for_ddl
-    - t_product_category
-    - t_country
 
   shardingAlgorithms:
     it_standard_fixture:
       type: IT.STANDARD.FIXTURE
-    db_inline_order_id:
-      type: INLINE
-      props:
-        algorithm-expression: db_${order_id_sharding % 2}
-    db_inline_item_id:
-      type: INLINE
-      props:
-        algorithm-expression: db_${db_inline_item_id % 2}
 
   keyGenerators:
     auto_increment:
@@ -83,6 +61,20 @@ rules:
   auditors:
     auditor_constant:
       type: IT.AUDITOR.FIXTURE
+      
+- !BROADCAST
+  tables:
+    - t_broadcast_table
+    - t_broadcast_table_for_ddl
+    - t_country
+    - t_product_category
 
+sqlFederation:
+  sqlFederationEnabled: true
+  executionPlanCache:
+    initialCapacity: 2000
+    maximumSize: 65535
+    
 props:
-  sql-federation-type: ADVANCED
+  sql-show: true
+

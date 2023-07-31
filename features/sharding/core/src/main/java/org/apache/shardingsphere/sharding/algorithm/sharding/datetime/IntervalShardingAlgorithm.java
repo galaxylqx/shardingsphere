@@ -17,15 +17,17 @@
 
 package org.apache.shardingsphere.sharding.algorithm.sharding.datetime;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnsupportedSQLOperationException;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnsupportedSQLOperationException;
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
 import org.apache.shardingsphere.sharding.exception.algorithm.sharding.ShardingAlgorithmInitializationException;
 import org.apache.shardingsphere.sharding.exception.data.InvalidDatetimeFormatException;
+import org.apache.shardingsphere.sharding.exception.data.NullShardingValueException;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -93,7 +95,7 @@ public final class IntervalShardingAlgorithm implements StandardShardingAlgorith
     
     private String getDateTimePattern(final Properties props) {
         ShardingSpherePreconditions.checkState(props.containsKey(DATE_TIME_PATTERN_KEY),
-                () -> new ShardingAlgorithmInitializationException(getType(), String.format("%s can not be null.", DATE_TIME_PATTERN_KEY)));
+                () -> new ShardingAlgorithmInitializationException(getType(), String.format("%s can not be null", DATE_TIME_PATTERN_KEY)));
         return props.getProperty(DATE_TIME_PATTERN_KEY);
     }
     
@@ -110,15 +112,16 @@ public final class IntervalShardingAlgorithm implements StandardShardingAlgorith
     private TemporalAccessor getDateTime(final String dateTimeKey, final String dateTimeValue, final String dateTimePattern) {
         try {
             return dateTimeFormatter.parse(dateTimeValue);
-        } catch (final DateTimeParseException ex) {
+        } catch (final DateTimeParseException ignored) {
             throw new InvalidDatetimeFormatException(dateTimeKey, dateTimeValue, dateTimePattern);
         }
     }
     
     private DateTimeFormatter getTableSuffixPattern(final Properties props) {
-        ShardingSpherePreconditions.checkState(props.containsKey(SHARDING_SUFFIX_FORMAT_KEY),
-                () -> new ShardingAlgorithmInitializationException(getType(), String.format("%s can not be null.", SHARDING_SUFFIX_FORMAT_KEY)));
-        return DateTimeFormatter.ofPattern(props.getProperty(SHARDING_SUFFIX_FORMAT_KEY));
+        String suffix = props.getProperty(SHARDING_SUFFIX_FORMAT_KEY);
+        ShardingSpherePreconditions.checkState(!Strings.isNullOrEmpty(suffix),
+                () -> new ShardingAlgorithmInitializationException(getType(), String.format("%s can not be null or empty.", SHARDING_SUFFIX_FORMAT_KEY)));
+        return DateTimeFormatter.ofPattern(suffix);
     }
     
     private ChronoUnit getStepUnit(final String stepUnit) {
@@ -132,6 +135,7 @@ public final class IntervalShardingAlgorithm implements StandardShardingAlgorith
     
     @Override
     public String doSharding(final Collection<String> availableTargetNames, final PreciseShardingValue<Comparable<?>> shardingValue) {
+        ShardingSpherePreconditions.checkNotNull(shardingValue.getValue(), NullShardingValueException::new);
         return doSharding(availableTargetNames, Range.singleton(shardingValue.getValue())).stream().findFirst().orElse(null);
     }
     
@@ -223,7 +227,7 @@ public final class IntervalShardingAlgorithm implements StandardShardingAlgorith
         Month dateTimeUpperAsMonth = dateTimeUpper.query(Month::from);
         Month dateTimeLowerAsMonth = dateTimeLower.query(Month::from);
         Month calculateTimeAsView = calculateTime.query(Month::from);
-        while (!(calculateTimeAsView.getValue() > dateTimeUpperAsMonth.getValue()) && (calculateTimeAsView.getValue() + stepAmount) <= Month.DECEMBER.getValue()) {
+        while (calculateTimeAsView.getValue() <= dateTimeUpperAsMonth.getValue() && (calculateTimeAsView.getValue() + stepAmount) <= Month.DECEMBER.getValue()) {
             if (hasIntersection(Range.closedOpen(calculateTimeAsView, calculateTimeAsView.plus(stepAmount)), range, dateTimeLowerAsMonth, dateTimeUpperAsMonth)) {
                 result.addAll(getMatchedTables(calculateTimeAsView, availableTargetNames));
             }
@@ -332,7 +336,7 @@ public final class IntervalShardingAlgorithm implements StandardShardingAlgorith
             return dateTimeFormatter.format((TemporalAccessor) endpoint);
         }
         if (endpoint instanceof java.sql.Date) {
-            return dateTimeFormatter.format(((java.sql.Date) endpoint).toLocalDate().atStartOfDay(ZoneId.systemDefault()));
+            return ((java.sql.Date) endpoint).toLocalDate().format(dateTimeFormatter);
         }
         if (endpoint instanceof Date) {
             return dateTimeFormatter.format(((Date) endpoint).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());

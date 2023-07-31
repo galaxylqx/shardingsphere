@@ -17,11 +17,13 @@
 
 package org.apache.shardingsphere.test.e2e.showprocesslist.engine;
 
-import org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.e2e.showprocesslist.container.composer.ClusterShowProcessListContainerComposer;
 import org.apache.shardingsphere.test.e2e.showprocesslist.env.ShowProcessListEnvironment;
 import org.apache.shardingsphere.test.e2e.showprocesslist.env.enums.ShowProcessListEnvTypeEnum;
 import org.apache.shardingsphere.test.e2e.showprocesslist.parameter.ShowProcessListTestParameter;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -37,6 +39,7 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -52,11 +55,11 @@ class ShowProcessListE2EIT {
     @ParameterizedTest(name = "{0}")
     @EnabledIf("isEnabled")
     @ArgumentsSource(TestCaseArgumentsProvider.class)
-    void assertShowProcessList(final ShowProcessListTestParameter testParam) throws SQLException, InterruptedException {
+    void assertShowProcessList(final ShowProcessListTestParameter testParam) throws SQLException {
         try (ClusterShowProcessListContainerComposer containerComposer = new ClusterShowProcessListContainerComposer(testParam)) {
             containerComposer.start();
             CompletableFuture<Void> executeSelectSleep = CompletableFuture.runAsync(getExecuteSleepThread("proxy", containerComposer));
-            Thread.sleep(5000L);
+            Awaitility.await().pollDelay(5L, TimeUnit.SECONDS).until(() -> true);
             try (
                     Connection connection = containerComposer.getProxyDataSource().getConnection();
                     Statement statement = connection.createStatement()) {
@@ -120,7 +123,7 @@ class ShowProcessListE2EIT {
             for (String each : ENV.getScenarios()) {
                 for (String runMode : ENV.getRunModes()) {
                     for (String governanceType : ENV.getGovernanceCenters()) {
-                        result.add(Arguments.of(new ShowProcessListTestParameter(new MySQLDatabaseType(), each, runMode, governanceType)));
+                        result.add(Arguments.of(new ShowProcessListTestParameter(TypedSPILoader.getService(DatabaseType.class, "MySQL"), each, runMode, governanceType)));
                     }
                 }
             }

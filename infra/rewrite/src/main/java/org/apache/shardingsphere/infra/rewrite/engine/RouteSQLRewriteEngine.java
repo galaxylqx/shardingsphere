@@ -18,9 +18,9 @@
 package org.apache.shardingsphere.infra.rewrite.engine;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.dml.SelectStatementContext;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.SelectStatementContext;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.datanode.DataNode;
 import org.apache.shardingsphere.infra.rewrite.context.SQLRewriteContext;
 import org.apache.shardingsphere.infra.rewrite.engine.result.RouteSQLRewriteResult;
@@ -63,7 +63,7 @@ public final class RouteSQLRewriteEngine {
      * @return SQL rewrite result
      */
     public RouteSQLRewriteResult rewrite(final SQLRewriteContext sqlRewriteContext, final RouteContext routeContext) {
-        Map<RouteUnit, SQLRewriteUnit> sqlRewriteUnits = new LinkedHashMap<>(routeContext.getRouteUnits().size(), 1);
+        Map<RouteUnit, SQLRewriteUnit> sqlRewriteUnits = new LinkedHashMap<>(routeContext.getRouteUnits().size(), 1F);
         for (Entry<String, Collection<RouteUnit>> entry : aggregateRouteUnitGroups(routeContext.getRouteUnits()).entrySet()) {
             Collection<RouteUnit> routeUnits = entry.getValue();
             if (isNeedAggregateRewrite(sqlRewriteContext.getSqlStatementContext(), routeUnits)) {
@@ -97,7 +97,7 @@ public final class RouteSQLRewriteEngine {
         }
     }
     
-    private boolean isNeedAggregateRewrite(final SQLStatementContext<?> sqlStatementContext, final Collection<RouteUnit> routeUnits) {
+    private boolean isNeedAggregateRewrite(final SQLStatementContext sqlStatementContext, final Collection<RouteUnit> routeUnits) {
         if (!(sqlStatementContext instanceof SelectStatementContext) || routeUnits.size() == 1) {
             return false;
         }
@@ -111,7 +111,7 @@ public final class RouteSQLRewriteEngine {
     }
     
     private Map<String, Collection<RouteUnit>> aggregateRouteUnitGroups(final Collection<RouteUnit> routeUnits) {
-        Map<String, Collection<RouteUnit>> result = new LinkedHashMap<>(routeUnits.size(), 1);
+        Map<String, Collection<RouteUnit>> result = new LinkedHashMap<>(routeUnits.size(), 1F);
         for (RouteUnit each : routeUnits) {
             String dataSourceName = each.getDataSourceMapper().getActualName();
             result.computeIfAbsent(dataSourceName, unused -> new LinkedList<>()).add(each);
@@ -154,7 +154,7 @@ public final class RouteSQLRewriteEngine {
     }
     
     private Map<RouteUnit, SQLRewriteUnit> translate(final SQLStatement sqlStatement, final Map<RouteUnit, SQLRewriteUnit> sqlRewriteUnits) {
-        Map<RouteUnit, SQLRewriteUnit> result = new LinkedHashMap<>(sqlRewriteUnits.size(), 1);
+        Map<RouteUnit, SQLRewriteUnit> result = new LinkedHashMap<>(sqlRewriteUnits.size(), 1F);
         for (Entry<RouteUnit, SQLRewriteUnit> entry : sqlRewriteUnits.entrySet()) {
             DatabaseType storageType = storageTypes.get(entry.getKey().getDataSourceMapper().getActualName());
             String sql = translatorRule.translate(entry.getValue().getSql(), sqlStatement, protocolType, storageType);

@@ -17,12 +17,13 @@
 
 package org.apache.shardingsphere.sharding.rewrite.token;
 
-import org.apache.shardingsphere.infra.binder.statement.ddl.AlterIndexStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.ddl.CreateDatabaseStatementContext;
-import org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType;
+import org.apache.shardingsphere.infra.binder.context.statement.ddl.AlterIndexStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.ddl.CreateDatabaseStatementContext;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
+import org.apache.shardingsphere.infra.rewrite.sql.token.pojo.SQLToken;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.sharding.rewrite.token.generator.impl.IndexTokenGenerator;
-import org.apache.shardingsphere.sharding.rewrite.token.pojo.IndexToken;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.ddl.index.IndexNameSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.ddl.index.IndexSegment;
@@ -35,8 +36,8 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -65,13 +66,13 @@ class IndexTokenGeneratorTest {
         when(indexSegment.getIndexName()).thenReturn(new IndexNameSegment(1, 3, mock(IdentifierValue.class)));
         AlterIndexStatementContext alterIndexStatementContext = mock(AlterIndexStatementContext.class, RETURNS_DEEP_STUBS);
         when(alterIndexStatementContext.getIndexes()).thenReturn(Collections.singleton(indexSegment));
-        when(alterIndexStatementContext.getDatabaseType()).thenReturn(new MySQLDatabaseType());
+        when(alterIndexStatementContext.getDatabaseType()).thenReturn(TypedSPILoader.getService(DatabaseType.class, "FIXTURE"));
         when(alterIndexStatementContext.getTablesContext().getSchemaName()).thenReturn(Optional.empty());
         IndexTokenGenerator generator = new IndexTokenGenerator();
         generator.setShardingRule(mock(ShardingRule.class));
         generator.setSchemas(Collections.singletonMap("test", mock(ShardingSphereSchema.class)));
         generator.setDatabaseName("test");
-        Collection<IndexToken> actual = generator.generateSQLTokens(alterIndexStatementContext);
+        Collection<SQLToken> actual = generator.generateSQLTokens(alterIndexStatementContext);
         assertThat(actual.size(), is(1));
         assertThat((new LinkedList<>(actual)).get(0).getStartIndex(), is(1));
     }

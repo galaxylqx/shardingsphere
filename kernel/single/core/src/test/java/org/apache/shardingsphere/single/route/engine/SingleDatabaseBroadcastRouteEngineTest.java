@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.single.route.engine;
 
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteUnit;
 import org.apache.shardingsphere.single.api.config.SingleRuleConfiguration;
@@ -58,7 +58,7 @@ class SingleDatabaseBroadcastRouteEngineTest {
     }
     
     private Map<String, DataSource> createDataSourceMap() throws SQLException {
-        Map<String, DataSource> result = new LinkedHashMap<>(2, 1);
+        Map<String, DataSource> result = new LinkedHashMap<>(2, 1F);
         Connection connection = mock(Connection.class, RETURNS_DEEP_STUBS);
         when(connection.getMetaData().getURL()).thenReturn("jdbc:h2:mem:db");
         result.put("ds_0", new MockedDataSource(connection));

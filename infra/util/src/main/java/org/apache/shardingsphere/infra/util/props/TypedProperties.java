@@ -46,12 +46,13 @@ public abstract class TypedProperties<E extends Enum<?> & TypedPropertyKey> {
     
     private Map<E, TypedPropertyValue> preload(final Class<E> keyClass) {
         E[] enumConstants = keyClass.getEnumConstants();
-        Map<E, TypedPropertyValue> result = new HashMap<>(enumConstants.length, 1);
+        Map<E, TypedPropertyValue> result = new HashMap<>(enumConstants.length, 1F);
         Collection<String> errorMessages = new LinkedList<>();
         for (E each : enumConstants) {
             TypedPropertyValue value = null;
             try {
-                value = new TypedPropertyValue(each, props.getOrDefault(each.getKey(), each.getDefaultValue()).toString());
+                Object propsValue = props.getOrDefault(each.getKey(), each.getDefaultValue());
+                value = new TypedPropertyValue(each, null == propsValue ? "" : propsValue.toString());
             } catch (final TypedPropertyValueException ex) {
                 errorMessages.add(ex.getMessage());
             }

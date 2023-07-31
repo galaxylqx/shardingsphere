@@ -17,17 +17,17 @@
 
 package org.apache.shardingsphere.sharding.route.engine.validator.ddl.impl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
-import org.apache.shardingsphere.infra.database.type.DatabaseTypeEngine;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseTypeRegistry;
 import org.apache.shardingsphere.infra.datanode.DataNode;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteMapper;
-import org.apache.shardingsphere.sharding.exception.metadata.DropInUsedTablesException;
 import org.apache.shardingsphere.sharding.exception.connection.ShardingDDLRouteException;
+import org.apache.shardingsphere.sharding.exception.metadata.DropInUsedTablesException;
 import org.apache.shardingsphere.sharding.exception.syntax.UnsupportedShardingOperationException;
 import org.apache.shardingsphere.sharding.route.engine.validator.ddl.ShardingDDLStatementValidator;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
@@ -44,27 +44,30 @@ import java.util.stream.Collectors;
 /**
  * Sharding drop table statement validator.
  */
-public final class ShardingDropTableStatementValidator extends ShardingDDLStatementValidator<DropTableStatement> {
+public final class ShardingDropTableStatementValidator extends ShardingDDLStatementValidator {
     
     @Override
-    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext<DropTableStatement> sqlStatementContext,
+    public void preValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                             final List<Object> params, final ShardingSphereDatabase database, final ConfigurationProperties props) {
-        if (!DropTableStatementHandler.ifExists(sqlStatementContext.getSqlStatement())) {
-            String defaultSchemaName = DatabaseTypeEngine.getDefaultSchemaName(sqlStatementContext.getDatabaseType(), database.getName());
+        DropTableStatement dropTableStatement = (DropTableStatement) sqlStatementContext.getSqlStatement();
+        if (!DropTableStatementHandler.ifExists(dropTableStatement)) {
+            String defaultSchemaName = new DatabaseTypeRegistry(sqlStatementContext.getDatabaseType()).getDefaultSchemaName(database.getName());
             ShardingSphereSchema schema = sqlStatementContext.getTablesContext().getSchemaName()
                     .map(database::getSchema).orElseGet(() -> database.getSchema(defaultSchemaName));
-            validateTableExist(schema, sqlStatementContext.getTablesContext().getTables());
+            validateTableExist(schema, sqlStatementContext.getTablesContext().getSimpleTableSegments());
         }
-        if (DropTableStatementHandler.containsCascade(sqlStatementContext.getSqlStatement())) {
-            throw new UnsupportedShardingOperationException("DROP TABLE ... CASCADE", sqlStatementContext.getTablesContext().getTables().iterator().next().getTableName().getIdentifier().getValue());
+        if (DropTableStatementHandler.containsCascade(dropTableStatement)) {
+            throw new UnsupportedShardingOperationException("DROP TABLE ... CASCADE",
+                    sqlStatementContext.getTablesContext().getSimpleTableSegments().iterator().next().getTableName().getIdentifier().getValue());
         }
     }
     
     @Override
-    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext<DropTableStatement> sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
+    public void postValidate(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext, final HintValueContext hintValueContext, final List<Object> params,
                              final ShardingSphereDatabase database, final ConfigurationProperties props, final RouteContext routeContext) {
-        checkTableInUsed(shardingRule, sqlStatementContext.getSqlStatement(), routeContext);
-        for (SimpleTableSegment each : sqlStatementContext.getSqlStatement().getTables()) {
+        DropTableStatement dropTableStatement = (DropTableStatement) sqlStatementContext.getSqlStatement();
+        checkTableInUsed(shardingRule, dropTableStatement, routeContext);
+        for (SimpleTableSegment each : dropTableStatement.getTables()) {
             if (isRouteUnitDataNodeDifferentSize(shardingRule, routeContext, each.getTableName().getIdentifier().getValue())) {
                 throw new ShardingDDLRouteException("DROP", "TABLE", sqlStatementContext.getTablesContext().getTableNames());
             }

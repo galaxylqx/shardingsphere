@@ -9,7 +9,7 @@ chapter = true
 
 ### Fully-qualified class name
 
-[`org.apache.shardingsphere.infra.database.type.DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/DatabaseType.java)
+[`org.apache.shardingsphere.infra.database.core.type.DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/core/src/main/java/org/apache/shardingsphere/infra/database/core/type/DatabaseType.java)
 
 ### Definition
 
@@ -17,22 +17,22 @@ Supported database types definition
 
 ### Implementation classes
 
-| *Configuration Type* | *Description*       | *Fully-qualified class name*                                                                                                                                                                                                                        |
-|----------------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SQL92                | SQL92 database type | [`org.apache.shardingsphere.infra.database.type.dialect.SQL92DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/SQL92DatabaseType.java)           |
-| MySQL                | MySQL database      | [`org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/MySQLDatabaseType.java)           |
-| MariaDB              | MariaDB database    | [`org.apache.shardingsphere.infra.database.type.dialect.MariaDBDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/MariaDBDatabaseType.java)       |
-| PostgreSQL           | PostgreSQL database | [`org.apache.shardingsphere.infra.database.type.dialect.PostgreSQLDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/PostgreSQLDatabaseType.java) |
-| Oracle               | Oracle database     | [`org.apache.shardingsphere.infra.database.type.dialect.OracleDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/OracleDatabaseType.java)         |
-| SQLServer            | SQLServer database  | [`org.apache.shardingsphere.infra.database.type.dialect.SQLServerDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/SQLServerDatabaseType.java)   |
-| H2                   | H2 database         | [`org.apache.shardingsphere.infra.database.type.dialect.H2DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/H2DatabaseType.java)                 |
-| openGauss            | OpenGauss database  | [`org.apache.shardingsphere.infra.database.type.dialect.OpenGaussDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/database/type/dialect/OpenGaussDatabaseType.java)   |
+| *Configuration Type* | *Description*       | *Fully-qualified class name*                                                                                                                                                                                                                                      |
+|----------------------|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SQL92                | SQL92 database type | [`org.apache.shardingsphere.infra.database.sql92.SQL92DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/sql92/src/main/java/org/apache/shardingsphere/infra/database/sql92/SQL92DatabaseType.java)                          |
+| MySQL                | MySQL database      | [`org.apache.shardingsphere.infra.database.mysql.MySQLDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/mysql/src/main/java/org/apache/shardingsphere/infra/database/mysql/MySQLDatabaseType.java)                          |
+| MariaDB              | MariaDB database    | [`org.apache.shardingsphere.infra.database.mariadb.MariaDBDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/mariadb/src/main/java/org/apache/shardingsphere/infra/database/mariadb/MariaDBDatabaseType.java)                |
+| PostgreSQL           | PostgreSQL database | [`org.apache.shardingsphere.infra.database.postgresql.PostgreSQLDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/postgresql/src/main/java/org/apache/shardingsphere/infra/database/postgresql/PostgreSQLDatabaseType.java) |
+| Oracle               | Oracle database     | [`org.apache.shardingsphere.infra.database.oracle.OracleDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/oracle/src/main/java/org/apache/shardingsphere/infra/database/oracle/OracleDatabaseType.java)                     |
+| SQLServer            | SQLServer database  | [`org.apache.shardingsphere.infra.database.sqlserver.SQLServerDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/sqlserver/src/main/java/org/apache/shardingsphere/infra/database/sqlserver/SQLServerDatabaseType.java)      |
+| H2                   | H2 database         | [`org.apache.shardingsphere.infra.database.h2.H2DatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/h2/src/main/java/org/apache/shardingsphere/infra/database/h2/H2DatabaseType.java)                                         |
+| openGauss            | OpenGauss database  | [`org.apache.shardingsphere.infra.database.opengauss.OpenGaussDatabaseType`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/opengauss/src/main/java/org/apache/shardingsphere/infra/database/opengauss/OpenGaussDatabaseType.java)      |
 
-## DialectSchemaMetaDataLoader
+## DialectMetaDataLoader
 
 ### Fully-qualified class name
 
-[`org.apache.shardingsphere.infra.metadata.database.schema.loader.metadata.DialectSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/metadata/DialectSchemaMetaDataLoader.java)
+[`org.apache.shardingsphere.infra.database.core.metadata.data.loader.DialectMetaDataLoader`](https://github.com/apache/shardingsphere/tree/master/infra/database/core/src/main/java/org/apache/shardingsphere/infra/database/core/metadata/data/loader/DialectMetaDataLoader.java)
 
 ### Definition
 
@@ -40,14 +40,14 @@ Use SQL dialect to load meta data rapidly
 
 ### Implementation classes
 
-| *Configuration Type* | *Description*                            | *Fully-qualified class name*                                                                                                                                                                                                                                                                            |
-|----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| MySQL                | Use MySQL dialect to load meta data      | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.MySQLSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/MySQLSchemaMetaDataLoader.java)           |
-| Oracle               | Use Oracle dialect to load meta data     | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.OracleSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/OracleSchemaMetaDataLoader.java)         |
-| PostgreSQL           | Use PostgreSQL dialect to load meta data | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.PostgreSQLSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/PostgreSQLSchemaMetaDataLoader.java) |
-| SQLServer            | Use SQLServer dialect to load meta data  | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.SQLServerSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/SQLServerSchemaMetaDataLoader.java)   |
-| H2                   | Use H2 dialect to load meta data         | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.H2SchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/H2SchemaMetaDataLoader.java)                 |
-| openGauss            | Use OpenGauss dialect to load meta data  | [`org.apache.shardingsphere.infra.metadata.database.schema.loader.dialect.OpenGaussSchemaMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/common/src/main/java/org/apache/shardingsphere/infra/metadata/database/schema/loader/dialect/OpenGaussSchemaMetaDataLoader.java)   |
+| *Configuration Type* | *Description*                            | *Fully-qualified class name*                                                                                                                                                                                                                                          |
+|----------------------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| MySQL                | Use MySQL dialect to load meta data      | [`org.apache.shardingsphere.infra.database.mysql.MySQLMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/mysql/src/main/java/org/apache/shardingsphere/infra/database/mysql/MySQLMetaDataLoader.java)                          |
+| Oracle               | Use Oracle dialect to load meta data     | [`org.apache.shardingsphere.infra.database.oracle.OracleMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/oracle/src/main/java/org/apache/shardingsphere/infra/database/oracle/OracleMetaDataLoader.java)                     |
+| PostgreSQL           | Use PostgreSQL dialect to load meta data | [`org.apache.shardingsphere.infra.database.postgresql.PostgreSQLMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/postgresql/src/main/java/org/apache/shardingsphere/infra/database/postgresql/PostgreSQLMetaDataLoader.java) |
+| SQLServer            | Use SQLServer dialect to load meta data  | [`org.apache.shardingsphere.infra.database.sqlserver.SQLServerMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/sqlserver/src/main/java/org/apache/shardingsphere/infra/database/sqlserver/SQLServerMetaDataLoader.java)      |
+| H2                   | Use H2 dialect to load meta data         | [`org.apache.shardingsphere.infra.database.h2.H2MetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/h2/src/main/java/org/apache/shardingsphere/infra/database/h2/H2MetaDataLoader.java)                                         |
+| openGauss            | Use OpenGauss dialect to load meta data  | [`org.apache.shardingsphere.infra.database.opengauss.OpenGaussMetaDataLoader`](https://github.com/apache/shardingsphere/blob/master/infra/database/type/opengauss/src/main/java/org/apache/shardingsphere/infra/database/opengauss/OpenGaussMetaDataLoader.java)      |
 
 ## DataSourcePoolMetaData 
 

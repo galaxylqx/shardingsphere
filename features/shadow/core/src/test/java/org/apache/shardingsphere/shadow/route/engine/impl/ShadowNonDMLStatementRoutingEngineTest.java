@@ -17,8 +17,8 @@
 
 package org.apache.shardingsphere.shadow.route.engine.impl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
-import org.apache.shardingsphere.infra.binder.statement.ddl.CreateTableStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.ddl.CreateTableStatementContext;
 import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteMapper;
@@ -52,7 +52,7 @@ class ShadowNonDMLStatementRoutingEngineTest {
         shadowRouteEngine = new ShadowNonDMLStatementRoutingEngine(createSQLStatementContext());
     }
     
-    private SQLStatementContext<?> createSQLStatementContext() {
+    private SQLStatementContext createSQLStatementContext() {
         CreateTableStatementContext result = mock(CreateTableStatementContext.class);
         MySQLCreateTableStatement sqlStatement = new MySQLCreateTableStatement(false);
         sqlStatement.getCommentSegments().add(new CommentSegment("/* SHARDINGSPHERE_HINT: SHADOW=true */", 0, 20));

@@ -20,7 +20,7 @@ package org.apache.shardingsphere.test.e2e.transaction.env;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.ProxyContainerConstants;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.StorageContainerConstants;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl.MySQLContainer;
@@ -89,7 +89,7 @@ public final class TransactionE2EEnvironment {
     
     private Properties loadProperties() {
         Properties result = new Properties();
-        try (InputStream inputStream = TransactionE2EEnvironment.class.getClassLoader().getResourceAsStream("env/it-env.properties")) {
+        try (InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("env/it-env.properties")) {
             result.load(inputStream);
         } catch (final IOException ex) {
             throw new RuntimeException(ex);

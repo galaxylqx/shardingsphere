@@ -17,11 +17,12 @@
 
 package org.apache.shardingsphere.metadata.persist.service.config.database;
 
-import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
+import org.apache.shardingsphere.infra.datasource.props.DataSourceProperties;
+import org.apache.shardingsphere.infra.metadata.version.MetaDataVersion;
 
-import javax.sql.DataSource;
-import java.util.Map;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Database based persist service.
@@ -39,17 +40,6 @@ public interface DatabaseBasedPersistService<T> {
     void persist(String databaseName, T configs);
     
     /**
-     * Persist version configurations.
-     * 
-     * @param databaseName database name
-     * @param version version
-     * @param dataSources data sources
-     * @param rules rules
-     * @param configs configurations
-     */
-    void persist(String databaseName, String version, Map<String, DataSource> dataSources, Collection<ShardingSphereRule> rules, T configs);
-    
-    /**
      * Load configurations.
      *
      * @param databaseName database name
@@ -58,19 +48,52 @@ public interface DatabaseBasedPersistService<T> {
     T load(String databaseName);
     
     /**
-     * Load configurations based version.
-     * 
-     * @param databaseName database name
-     * @param version version
-     * @return configurations
-     */
-    T load(String databaseName, String version);
-    
-    /**
-     * Judge whether schema configuration existed.
+     * Load configuration.
      *
      * @param databaseName database name
-     * @return configuration existed or not
+     * @param name name
+     * @return configurations
      */
-    boolean isExisted(String databaseName);
+    default T load(String databaseName, String name) {
+        return null;
+    }
+    
+    /**
+     * Delete rule.
+     *
+     * @param databaseName database name
+     * @param ruleName rule name
+     */
+    default void delete(String databaseName, String ruleName) {
+    }
+    
+    /**
+     * Delete configurations.
+     *
+     * @param databaseName database name
+     * @param configs configurations
+     */
+    default void delete(String databaseName, T configs) {
+    }
+    
+    /**
+     * Persist configurations.
+     *
+     * @param databaseName database name
+     * @param configs configurations
+     * @return meta data versions
+     */
+    default Collection<MetaDataVersion> persistConfig(String databaseName, T configs) {
+        return Collections.emptyList();
+    }
+    
+    /**
+     * TODO remove this after meta data refactor completed
+     * Append data source properties map.
+     *
+     * @param databaseName database name
+     * @param toBeAppendedDataSourcePropsMap data source properties map to be appended
+     */
+    default void append(final String databaseName, final Map<String, DataSourceProperties> toBeAppendedDataSourcePropsMap) {
+    }
 }

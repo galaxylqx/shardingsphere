@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.sharding.rewrite.token.pojo;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.route.context.RouteMapper;
 import org.apache.shardingsphere.infra.route.context.RouteUnit;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
@@ -41,12 +41,12 @@ class ConstraintTokenTest {
     
     @Test
     void assertUpperCaseToString() {
-        SQLStatementContext<?> sqlStatementContext = mockSQLStatementContext();
+        SQLStatementContext sqlStatementContext = mockSQLStatementContext();
         assertThat(new ConstraintToken(0, 1, new IdentifierValue("uc"), sqlStatementContext, mock(ShardingRule.class)).toString(getRouteUnit()), is("uc_t_order_0"));
     }
     
-    private SQLStatementContext<?> mockSQLStatementContext() {
-        SQLStatementContext<?> result = mock(SQLStatementContext.class, RETURNS_DEEP_STUBS);
+    private SQLStatementContext mockSQLStatementContext() {
+        SQLStatementContext result = mock(SQLStatementContext.class, RETURNS_DEEP_STUBS);
         when(result.getTablesContext().getTableNames()).thenReturn(Collections.singletonList("T_ORDER"));
         return result;
     }

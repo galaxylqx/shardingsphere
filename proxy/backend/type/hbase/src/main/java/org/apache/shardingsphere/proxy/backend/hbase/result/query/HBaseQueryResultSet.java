@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.proxy.backend.hbase.result.query;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPI;
 import java.util.Collection;
 
@@ -31,7 +31,7 @@ public interface HBaseQueryResultSet extends TypedSPI {
      *
      * @param sqlStatementContext SQL statement context
      */
-    void init(SQLStatementContext<?> sqlStatementContext);
+    void init(SQLStatementContext sqlStatementContext);
     
     /**
      * Get result set column names.

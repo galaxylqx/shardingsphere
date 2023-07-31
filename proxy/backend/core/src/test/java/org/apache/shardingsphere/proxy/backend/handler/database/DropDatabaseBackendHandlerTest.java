@@ -18,9 +18,11 @@
 package org.apache.shardingsphere.proxy.backend.handler.database;
 
 import org.apache.shardingsphere.authority.rule.AuthorityRule;
-import org.apache.shardingsphere.dialect.exception.syntax.database.DatabaseDropNotExistsException;
+import org.apache.shardingsphere.infra.exception.dialect.exception.syntax.database.DatabaseDropNotExistsException;
+import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
+import org.apache.shardingsphere.infra.util.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.mode.metadata.MetaDataContexts;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
@@ -43,6 +45,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -73,7 +76,7 @@ class DropDatabaseBackendHandlerTest {
     }
     
     private ContextManager mockContextManager() {
-        Map<String, ShardingSphereDatabase> databases = new HashMap<>(2, 1);
+        Map<String, ShardingSphereDatabase> databases = new HashMap<>(2, 1F);
         ShardingSphereDatabase database = mock(ShardingSphereDatabase.class, RETURNS_DEEP_STUBS);
         when(database.getRuleMetaData().getRules()).thenReturn(Collections.emptyList());
         databases.put("foo_db", database);
@@ -99,7 +102,7 @@ class DropDatabaseBackendHandlerTest {
     void assertExecuteDropNotExistDatabaseWithIfExists() {
         when(sqlStatement.getDatabaseName()).thenReturn("test_not_exist_db");
         when(sqlStatement.isIfExists()).thenReturn(true);
-        handler.execute();
+        assertDoesNotThrow(() -> handler.execute());
     }
     
     @Test
@@ -111,12 +114,21 @@ class DropDatabaseBackendHandlerTest {
     }
     
     @Test
-    void assertExecuteDropCurrentDatabase() {
+    void assertExecuteDropCurrentDatabaseWithMySQL() {
         when(connectionSession.getDatabaseName()).thenReturn("foo_db");
+        when(connectionSession.getProtocolType()).thenReturn(TypedSPILoader.getService(DatabaseType.class, "MySQL"));
         when(sqlStatement.getDatabaseName()).thenReturn("foo_db");
         ResponseHeader responseHeader = handler.execute();
         verify(connectionSession).setCurrentDatabase(null);
         assertThat(responseHeader, instanceOf(UpdateResponseHeader.class));
+    }
+    
+    @Test
+    void assertExecuteDropCurrentDatabaseWithPostgreSQL() {
+        when(connectionSession.getDatabaseName()).thenReturn("foo_db");
+        when(connectionSession.getProtocolType()).thenReturn(TypedSPILoader.getService(DatabaseType.class, "PostgreSQL"));
+        when(sqlStatement.getDatabaseName()).thenReturn("foo_db");
+        assertThrows(UnsupportedOperationException.class, () -> handler.execute());
     }
     
     @Test

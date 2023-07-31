@@ -18,7 +18,7 @@
 package org.apache.shardingsphere.sharding.route.engine.type.complex;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
@@ -42,7 +42,7 @@ public final class ShardingComplexRoutingEngine implements ShardingRouteEngine {
     
     private final ShardingConditions shardingConditions;
     
-    private final SQLStatementContext<?> sqlStatementContext;
+    private final SQLStatementContext sqlStatementContext;
     
     private final HintValueContext hintValueContext;
     
@@ -52,7 +52,6 @@ public final class ShardingComplexRoutingEngine implements ShardingRouteEngine {
     
     @Override
     public RouteContext route(final ShardingRule shardingRule) {
-        RouteContext result = new RouteContext();
         Collection<String> bindingTableNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         Collection<RouteContext> routeContexts = new LinkedList<>();
         for (String each : logicTables) {
@@ -67,6 +66,7 @@ public final class ShardingComplexRoutingEngine implements ShardingRouteEngine {
         if (routeContexts.isEmpty()) {
             throw new ShardingTableRuleNotFoundException(logicTables);
         }
+        RouteContext result = new RouteContext();
         if (1 == routeContexts.size()) {
             RouteContext newRouteContext = routeContexts.iterator().next();
             result.getOriginalDataNodes().addAll(newRouteContext.getOriginalDataNodes());

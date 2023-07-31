@@ -17,11 +17,11 @@
 
 package org.apache.shardingsphere.single.route.validator.ddl;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.exception.SchemaNotFoundException;
 import org.apache.shardingsphere.infra.metadata.database.ShardingSphereDatabase;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
-import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
+import org.apache.shardingsphere.infra.exception.core.ShardingSpherePreconditions;
 import org.apache.shardingsphere.single.exception.DropNotEmptySchemaException;
 import org.apache.shardingsphere.single.route.validator.SingleMetaDataValidator;
 import org.apache.shardingsphere.single.rule.SingleRule;
@@ -32,12 +32,13 @@ import org.apache.shardingsphere.sql.parser.sql.dialect.handler.ddl.DropSchemaSt
 /**
  * Single drop schema meta data validator.
  */
-public final class SingleDropSchemaMetaDataValidator implements SingleMetaDataValidator<DropSchemaStatement> {
+public final class SingleDropSchemaMetaDataValidator implements SingleMetaDataValidator {
     
     @Override
-    public void validate(final SingleRule rule, final SQLStatementContext<DropSchemaStatement> sqlStatementContext, final ShardingSphereDatabase database) {
-        boolean containsCascade = DropSchemaStatementHandler.containsCascade(sqlStatementContext.getSqlStatement());
-        for (IdentifierValue each : sqlStatementContext.getSqlStatement().getSchemaNames()) {
+    public void validate(final SingleRule rule, final SQLStatementContext sqlStatementContext, final ShardingSphereDatabase database) {
+        DropSchemaStatement dropSchemaStatement = (DropSchemaStatement) sqlStatementContext.getSqlStatement();
+        boolean containsCascade = DropSchemaStatementHandler.containsCascade(dropSchemaStatement);
+        for (IdentifierValue each : dropSchemaStatement.getSchemaNames()) {
             String schemaName = each.getValue();
             ShardingSphereSchema schema = database.getSchema(schemaName);
             ShardingSpherePreconditions.checkNotNull(schema, () -> new SchemaNotFoundException(schemaName));

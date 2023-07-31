@@ -20,8 +20,8 @@ package org.apache.shardingsphere.encrypt.rewrite.token.generator;
 import org.apache.shardingsphere.encrypt.rewrite.condition.EncryptCondition;
 import org.apache.shardingsphere.encrypt.rewrite.condition.EncryptConditionEngine;
 import org.apache.shardingsphere.encrypt.rewrite.token.generator.fixture.EncryptGeneratorFixtureBuilder;
-import org.apache.shardingsphere.infra.binder.statement.dml.UpdateStatementContext;
-import org.apache.shardingsphere.infra.database.DefaultDatabase;
+import org.apache.shardingsphere.infra.binder.context.statement.dml.UpdateStatementContext;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
 import org.apache.shardingsphere.infra.rewrite.sql.token.pojo.SQLToken;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ class EncryptPredicateRightValueTokenGeneratorTest {
         generator.setEncryptConditions(getEncryptConditions(updateStatementContext));
         Collection<SQLToken> sqlTokens = generator.generateSQLTokens(updateStatementContext);
         assertThat(sqlTokens.size(), is(1));
-        assertThat(sqlTokens.iterator().next().toString(), is("'123456'"));
+        assertThat(sqlTokens.iterator().next().toString(), is("'assistedEncryptValue'"));
     }
     
     private Collection<EncryptCondition> getEncryptConditions(final UpdateStatementContext updateStatementContext) {

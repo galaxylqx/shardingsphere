@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.proxy.backend.session;
 
-import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
+import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 
 /**
  * Server prepared statement for clients of ShardingSphere-Proxy.
@@ -36,5 +36,5 @@ public interface ServerPreparedStatement {
      *
      * @return {@link SQLStatementContext}
      */
-    SQLStatementContext<?> getSqlStatementContext();
+    SQLStatementContext getSqlStatementContext();
 }

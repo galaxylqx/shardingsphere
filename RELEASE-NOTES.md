@@ -1,3 +1,76 @@
+## Release 5.4.0
+
+### API Changes
+Metadata: Change sharding broadcast tables to global broadcast tables
+JDBC: Remove exclamation mark (!) for global rules
+DistSQL: Simplify keywords ASSISTED_QUERY, LIKE_QUERY in encrypt DistSQL
+DistSQL: Optimize SQL_PARSER rule syntax
+Encrypt: Adjust encryption yaml API to distinguish between encrypt, like, and assisted query configurations
+Encrypt: Remove plain column and queryWithCipherColumn configuration in encrypt feature
+Readwrite-splitting: Refactor read/write splitting api
+Proxy: Remove property proxy-instance-type configuration
+Proxy: Remove property proxy-backend-executor-suitable
+Proxy: Remove property proxy-mysql-default-version
+Scaling: Refactor commit rollback streaming to drop streaming
+Sharding: Merge ShardingCacheRule into ShardingRule (Experimental)
+
+### New Features
+DistSQL: New syntax to manage SQL_FEDERATION rule
+Proxy: Support Unix Domain Socket
+
+### Enhancements
+Scaling: CDC supports pure incremental mode
+Scaling: CDC supports exporting data by transaction
+Scaling: CDC supports MySQL and PostgreSQL
+Scaling: CDC supports single table
+Scaling: CDC supports all openGauss data types
+Scaling: CDC supports replication reconnection
+Scaling: Remove DataConsistencyCalculateAlgorithmChooser
+Scaling: Improve performance of integer unique key table inventory data splitting
+Scaling: Adjust process configuration default value to reduce resource consumption
+Scaling: Auto refresh table metadata for migration
+Scaling: Compatible with openGauss existing replication slot reuse when database not existing
+Scaling: Show data consistency check status result should be empty when it's not completed
+Scaling: Enable concurrent CRC32 match on source and target
+Scaling: Pipeline job compatible with sharding rule audit strategy
+Metadata: Refactor metadata persistence structure
+Metadata: Optimize the process of loading single table metadata
+Metadata: Support MySQL/PostgreSQL/openGauss system tables empty query
+DistSQL: Add support for transactionalReadQueryStrategy for read/write splitting rule
+DistSQL: Enhanced algorithm properties check
+Transaction: Add privilege check
+Transaction: Remove the TransactionTypeHolder and only create the current transaction manager
+Parser: Support MySQL LOAD DATA and LOAD XML statement with single table or broadcast table
+Parser: Improve the parsing support of high-priority SQL statements in the test results of the MySQL test program
+Parser: Oracle dialect parser now supports Chinese comma
+Encrypt: Support query of encrypt column in projection subquery when use encrypt feature
+Kernel: Adds table existence metadata check for INSERT, DELETE, UPDATE and SELECT statements
+JDBC: Implement batch execution for ShardingSphereStatement
+Proxy: Frontend supports SSL/TLS
+Proxy: Support Flush message for PostgreSQL/openGauss Proxy
+Proxy: Support data type bit, bool for PostgreSQL Proxy
+
+### Bug Fixes
+Scaling: Fix pipeline job failure status persistence and usage
+Scaling: Fix CDC DELETE event Record.beforeList is null
+Scaling: Fix openGauss mppdb decoding plugin single quote issue
+Scaling: Fix execute engine not closed after job stopping
+Scaling: Fix stop job before task starting
+Metadata: Fix case sensitive issue when loading schema meta data with H2 database
+Metadata: Fix "object not found" exception when config PostgreSQL/openGauss schema name as database name
+DistSQL: Fix wrong result of check_table_metadata_enabled when execute SHOW DIST VARIABLE
+Encrypt: Fix SQL rewrite exception when use PostgreSQL/openGauss encrypt like feature
+Sharding: Support null sharding condition pass to sharding algorithm to allow user control null value route
+Parser: Support BETWEEN AND expression parsing in MySQL Projection
+Mask: Fix wrong mask result when config same value of from-x and to-y with KEEP_FROM_X_TO_Y
+Infra: Fix ClassNotFoundException may occur when missing pgjdbc
+Proxy: Fix MySQL packet out of order when client sending pipelining requests
+
+### Change Log
+
+1. [MILESTONE](https://github.com/apache/shardingsphere/milestone/25)
+
+
 ## 5.3.2
 
 ### API Changes
@@ -82,7 +155,6 @@
 1. Kernel: Refactor encrypt integration test logic and add more test cases
 1. Kernel: Add salt props for MD5MaskAlgorithm, MD5EncryptAlgorithm
 1. Kernel: Refactor ShardingConditionEngine to support SPI configuration
-1. DistSQL: Support defining column level `QUERY_WITH_CIPHER_COLUMN` when `CREATE ENCRYPT RULE`
 1. DistSQL: Add algorithm type check for `CREATE SHARDING TABLE RULE`
 
 ### Bug Fixes
@@ -278,7 +350,7 @@
 ### New Feature
 
 1. Support SQL audit for sharding feature
-1. Support MySQL show processlist and kill process list id feature
+1. Support MySQL show processlist and kill process id feature
 1. Scaling: Add dedicated DistSQL for data migration
 1. Scaling: Basic support migrate data to heterogeneous database
 1. DistSQL: New syntax `CREATE MIGRATION PROCESS CONFIGURATION`
@@ -856,7 +928,6 @@
 1. Fix npe when using shadow and readwrite_splitting
 1. Fix wrong metadata when actual table is case insensitive
 1. Fix encrypt rewrite exception when execute multiple table join query
-1. Fix encrypt rewrite wrong result with table level queryWithCipherColumn
 1. Fix parsing chinese
 1. Fix encrypt exists sub query
 1. Fix full route caused by the MySQL BINARY keyword in the sharding condition
@@ -885,7 +956,7 @@
 1. Scaling: Fix PostgreSQL xml data type consistency check
 1. Fix database discovery failed to modify cron configuration
 1. Fix single read data source use weight loadbalance algorithm error
-1. Fix create redundant data souce without memory mode
+1. Fix create redundant data source without memory mode
 1. Fix column value matching shadow algorithm data type conversion exception
 
 ### Change Log
@@ -1188,7 +1259,6 @@
 1. Proxy for PostgreSQL decode parameters error in all types except String.
 1. COM_STM_EXECUTE of proxy for MySQL could not support sysbench.
 1. None sharding strategy could not config in spring-boot.
-1. Plain column could not get from resultSet in encrypt mode.
 1. WasNull field was wrong in GroupByStreamMergeResult.
 1. Metadata.getColumns could not work in JDBC.
 1. IN operator contains space and `\n` `\t` `\r` could not supported by parser.

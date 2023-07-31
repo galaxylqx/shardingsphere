@@ -21,7 +21,7 @@ import org.apache.shardingsphere.db.protocol.mysql.constant.MySQLBinaryColumnTyp
 import org.apache.shardingsphere.db.protocol.mysql.packet.binlog.row.column.MySQLBinlogColumnDef;
 import org.apache.shardingsphere.db.protocol.mysql.packet.binlog.row.column.value.MySQLBinlogProtocolValue;
 import org.apache.shardingsphere.db.protocol.mysql.payload.MySQLPacketPayload;
-import org.apache.shardingsphere.infra.util.exception.external.sql.type.generic.UnsupportedSQLOperationException;
+import org.apache.shardingsphere.infra.exception.core.external.sql.type.generic.UnsupportedSQLOperationException;
 
 import java.io.Serializable;
 
@@ -40,11 +40,11 @@ public final class MySQLStringBinlogProtocolValue implements MySQLBinlogProtocol
             type |= 0x30;
         }
         switch (MySQLBinaryColumnType.valueOf(type)) {
-            case MYSQL_TYPE_ENUM:
+            case ENUM:
                 return readEnumValue(length, payload);
-            case MYSQL_TYPE_SET:
+            case SET:
                 return payload.getByteBuf().readByte();
-            case MYSQL_TYPE_STRING:
+            case STRING:
                 return new MySQLBinaryString(payload.readStringFixByBytes(readActualLength(length, payload)));
             default:
                 throw new UnsupportedSQLOperationException(MySQLBinaryColumnType.valueOf(type).toString());
